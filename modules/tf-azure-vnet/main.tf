@@ -1,3 +1,12 @@
+/**
+ * # Terraform Azure Module: Virtual Network
+ *
+ * This module installs an Azure Virtual Network and its subnets.
+ *
+ * The Virtual Network Subnets can each be associated with an 'Azure Network Security Group'
+ * and an 'Azure NAT Gateway'.
+ */
+
 # Virtual Network
 resource "azurerm_virtual_network" "vnet" {
   name                = var.name

@@ -1,3 +1,12 @@
+/*
+ * # Terraform Azure Module: Bastion Host
+ *
+ * This module installs an Azure Bastion Host and its public IP address.
+ *
+ * This module also configures the 'AzureBastionSubnet' in the provided Virtual Network
+ * with the provided subnet prefix.
+ */
+
 # Subnet
 resource "azurerm_subnet" "snet" {
   count = var.sku != "Developer" ? 1 : 0

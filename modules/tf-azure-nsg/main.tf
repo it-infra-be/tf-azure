@@ -1,3 +1,11 @@
+/*
+ * # Terraform Azure Module: Network Security Group
+ *
+ * This module installs an Azure Network Security Group and its rules.
+ *
+ * The Network Security Group associations are handled by the resources that need it.
+ */
+
 # Network Security Group
 resource "azurerm_network_security_group" "nsg" {
   name                = var.name

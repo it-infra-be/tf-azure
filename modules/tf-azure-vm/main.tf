@@ -1,3 +1,10 @@
+/*
+ * # Terraform Azure Module: Virtual Machine
+ *
+ * This module installs an Azure (Linux) Virtual Machine.
+ *
+ * This Virtual Machine can also be associated with an Azure Network Security Group.
+ */
 # Interfaces
 resource "azurerm_network_interface" "interface" {
   for_each = { for interface in var.interfaces : interface.name => interface }

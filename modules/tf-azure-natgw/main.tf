@@ -1,3 +1,11 @@
+/*
+ * # Terraform Azure Module: NAT Gateway
+ *
+ * This module installs an Azure NAT Gateway together with its public IPs and public IP prefixes.
+ *
+ * The NAT Gateway associations are handled by the resources that need it.
+ */
+
 # NAT Gateway
 resource "azurerm_nat_gateway" "natgw" {
   name                    = var.name
