@@ -1,3 +1,10 @@
+/*
+ * # Terraform Azure: Resource Group
+ *
+ * This repository provides a collection of Terraform Azure Modules.
+ */
+
+
 # Info: Naming help: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
 #       Abbreviations: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
 #       Tagging: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
