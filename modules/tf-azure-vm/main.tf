@@ -1,16 +1,16 @@
 # Interfaces
 resource "azurerm_network_interface" "interface" {
-  count = length(var.interfaces)
+  for_each = { for interface in var.interfaces : interface.name => interface }
 
-  name                           = var.interfaces[count.index].name
+  name                           = each.key
   resource_group_name            = var.resource_group_name
   location                       = var.location
-  ip_forwarding_enabled          = var.interfaces[count.index].ip_forwarding_enabled
-  accelerated_networking_enabled = var.interfaces[count.index].accelerated_networking_enabled
-  internal_dns_name_label        = var.interfaces[count.index].internal_dns_name_label
+  ip_forwarding_enabled          = each.value.ip_forwarding_enabled
+  accelerated_networking_enabled = each.value.accelerated_networking_enabled
+  internal_dns_name_label        = each.value.internal_dns_name_label
 
   dynamic "ip_configuration" {
-    for_each = var.interfaces[count.index].ip_configurations
+    for_each = each.value.ip_configurations
 
     content {
       name                          = ip_configuration.value.name
@@ -33,7 +33,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   zone                  = var.zone
   size                  = var.size
   user_data             = var.user_data
-  network_interface_ids = azurerm_network_interface.interface[*].id
+  network_interface_ids = [ for interface in values(azurerm_network_interface.interface) : interface.id ]
 
   disable_password_authentication = true
   admin_ssh_key {
@@ -54,4 +54,16 @@ resource "azurerm_linux_virtual_machine" "vm" {
     sku       = var.source_image_reference.sku
     version   = var.source_image_reference.version
   }
+}
+
+# Network Security Group Association
+resource "azurerm_network_interface_security_group_association" "nsg" {
+  for_each = {
+    for interface in var.interfaces :
+    interface.name => interface
+    if interface.has_network_security_group == true
+  }
+
+  network_interface_id      = azurerm_network_interface.interface[each.key].id
+  network_security_group_id = each.value.network_security_group_id
 }

@@ -19,3 +19,19 @@ output "subnets" {
     }
   }
 }
+
+output "network_security_group_associations" {
+  description = "The network security group associated with each subnet."
+  value = {
+    for name, association in azurerm_subnet_network_security_group_association.nsg :
+    name => association.network_security_group_id
+  }
+}
+
+output "nat_gateway_associations" {
+  description = "The NAT gateway associated with each subnet."
+  value = {
+    for name, association in azurerm_subnet_nat_gateway_association.natgw :
+    name => association.nat_gateway_id
+  }
+}

@@ -31,12 +31,6 @@ variable "zones" {
   default     = null
 }
 
-variable "subnets" {
-  description = "Subnet IDs to associate with the NAT Gateway."
-  type        = list(string)
-  default     = []
-}
-
 variable "public_ips" {
   description = "Public IP addresses to associate with the NAT Gateway."
   type = list(object({

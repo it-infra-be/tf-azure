@@ -8,14 +8,6 @@ resource "azurerm_nat_gateway" "natgw" {
   zones                   = var.zones
 }
 
-# Subnets association
-resource "azurerm_subnet_nat_gateway_association" "snet" {
-  for_each = toset(var.subnets)
-
-  subnet_id      = each.key
-  nat_gateway_id = azurerm_nat_gateway.natgw.id
-}
-
 # Public IP Association
 resource "azurerm_public_ip" "pip" {
   for_each = { for pip in var.public_ips : pip.name => pip }

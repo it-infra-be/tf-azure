@@ -24,5 +24,9 @@ variable "subnets" {
     name                            = string
     address_prefix                  = string
     default_outbound_access_enabled = optional(bool, false)
+    has_network_security_group      = optional(bool, false)
+    network_security_group_id       = optional(string)
+    has_nat_gateway                 = optional(bool, false)
+    nat_gateway_id                  = optional(string)
   }))
 }

@@ -90,5 +90,7 @@ variable "interfaces" {
       private_ip_address         = optional(string)
       public_ip_address_id       = optional(string)
     }))
+    has_network_security_group   = optional(bool, false)
+    network_security_group_id    = optional(string)
   }))
 }
