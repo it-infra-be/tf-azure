@@ -34,6 +34,7 @@ with the provided subnet prefix.
 | Name | Description |
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Bastion Host. |
+| <a name="output_location"></a> [location](#output\_location) | The location of the Bastion Host. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Bastion Host. |
 | <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | The public IP of the Bastion Host. |
 <!-- END_TF_DOCS -->

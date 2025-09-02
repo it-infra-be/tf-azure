@@ -15,9 +15,9 @@ This Virtual Machine can also be associated with an Azure Network Security Group
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_admin_ssh_key"></a> [admin\_ssh\_key](#input\_admin\_ssh\_key) | Public SSH Key of the local administrator for the virtual machine. | `string` | n/a | yes |
+| <a name="input_admin_public_key"></a> [admin\_public\_key](#input\_admin\_public\_key) | Public SSH Key of the local administrator for the virtual machine. | `string` | n/a | yes |
 | <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | Name of the local administrator for the virtual machine. | `string` | n/a | yes |
-| <a name="input_interfaces"></a> [interfaces](#input\_interfaces) | Virtual machine interfaces. | <pre>list(object({<br/>    name                           = string<br/>    ip_forwarding_enabled          = optional(bool)<br/>    accelerated_networking_enabled = optional(bool)<br/>    internal_dns_name_label        = optional(string)<br/>    ip_configurations = list(object({<br/>      name                       = string<br/>      subnet_id                  = string<br/>      primary                    = optional(bool)<br/>      private_ip_address_version = optional(string)<br/>      private_ip_address         = optional(string)<br/>      public_ip_address_id       = optional(string)<br/>    }))<br/>    has_network_security_group   = optional(bool, false)<br/>    network_security_group_id    = optional(string)<br/>  }))</pre> | n/a | yes |
+| <a name="input_interfaces"></a> [interfaces](#input\_interfaces) | Virtual machine interfaces. | <pre>list(object({<br/>    name                           = string<br/>    ip_forwarding_enabled          = optional(bool)<br/>    accelerated_networking_enabled = optional(bool)<br/>    internal_dns_name_label        = optional(string)<br/>    ip_configurations = list(object({<br/>      name                       = string<br/>      subnet_id                  = string<br/>      primary                    = optional(bool)<br/>      private_ip_address_version = optional(string)<br/>      private_ip_address         = optional(string)<br/>      public_ip_address_id       = optional(string)<br/>    }))<br/>    has_network_security_group = optional(bool, false)<br/>    network_security_group_id  = optional(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location of the virtual machine. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the virtual machine. | `string` | n/a | yes |
 | <a name="input_os_disk"></a> [os\_disk](#input\_os\_disk) | OS disk for this Virtual Machine. | <pre>object({<br/>    name                 = optional(string)<br/>    disk_size_gb         = optional(number)<br/>    caching              = optional(string, "ReadWrite")<br/>    storage_account_type = optional(string, "Standard_LRS")<br/>  })</pre> | `{}` | no |
@@ -33,6 +33,7 @@ This Virtual Machine can also be associated with an Azure Network Security Group
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Linux Virtual Machine. |
 | <a name="output_interfaces"></a> [interfaces](#output\_interfaces) | The Linux Virtual Machine interfaces. |
+| <a name="output_location"></a> [location](#output\_location) | The location of the Linux Virtual Machine. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Linux Virtual Machine. |
 | <a name="output_network_security_group_associations"></a> [network\_security\_group\_associations](#output\_network\_security\_group\_associations) | The network security group associated with each interface. |
 | <a name="output_private_ip_address"></a> [private\_ip\_address](#output\_private\_ip\_address) | The primary private IP address of the Linux Virtual Machine. |
