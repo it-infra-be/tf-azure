@@ -17,17 +17,19 @@ variable "sku_name" {
   description = "SKU Name of the NAT Gateway."
   type        = string
   default     = "Standard"
+  nullable    = false
 }
 
 variable "idle_timeout_in_minutes" {
   description = "TCP idle timeout of the NAT Gateway."
   type        = number
   default     = 4
+  nullable    = false
 }
 
-variable "zones" {
-  description = "Zones to which NAT Gateway belongs."
-  type        = list(string)
+variable "zone" {
+  description = "Zone to which NAT Gateway belongs."
+  type        = string
   default     = null
 }
 
@@ -37,7 +39,8 @@ variable "public_ips" {
     name  = string
     zones = optional(list(string))
   }))
-  default = []
+  default  = []
+  nullable = false
 }
 
 variable "public_ip_prefixes" {
@@ -47,5 +50,6 @@ variable "public_ip_prefixes" {
     length = number
     zones  = optional(list(string))
   }))
-  default = []
+  default  = []
+  nullable = false
 }

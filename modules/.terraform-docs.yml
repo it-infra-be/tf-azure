@@ -1,14 +1,15 @@
-# Terraform-docs configuration for root
+# Terraform-docs configuration for modules
 formatter: "markdown table"
 header-from: "main.tf"
 footer-from: ""
 recursive:
-  enabled: false
+  enabled: true
+  path: .
+  include-main: false
 sections:
   show:
     - header
     - providers
-    - modules
     - inputs
     - outputs
 output:

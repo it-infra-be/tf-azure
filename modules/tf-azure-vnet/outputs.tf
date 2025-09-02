@@ -8,6 +8,11 @@ output "name" {
   value       = azurerm_virtual_network.vnet.name
 }
 
+output "location" {
+  description = "The location of the Virtual Network."
+  value       = azurerm_virtual_network.vnet.location
+}
+
 output "subnets" {
   description = "The Virtual Network subnets."
   value = {

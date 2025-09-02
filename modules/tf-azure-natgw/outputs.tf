@@ -8,6 +8,16 @@ output "name" {
   value       = azurerm_nat_gateway.natgw.name
 }
 
+output "location" {
+  description = "The location of the NAT gateway."
+  value       = azurerm_nat_gateway.natgw.location
+}
+
+output "zone" {
+  description = "The zone of the NAT gateway."
+  value       = azurerm_nat_gateway.natgw.zones != null ? one(azurerm_nat_gateway.natgw.zones) : null
+}
+
 output "public_ips" {
   description = "The public IPs of the NAT gateway."
   value = { for name, public_ip in azurerm_public_ip.pip :

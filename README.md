@@ -9,6 +9,13 @@ This repository provides a collection of Terraform Azure Modules.
 |------|---------|
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.41.0 |
 
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_nsg"></a> [nsg](#module\_nsg) | ./modules/tf-azure-nsg | n/a |
+| <a name="module_vnet"></a> [vnet](#module\_vnet) | ./modules/tf-azure-vnet | n/a |
+
 ## Inputs
 
 | Name | Description | Type | Default | Required |

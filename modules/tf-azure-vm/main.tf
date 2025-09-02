@@ -40,12 +40,12 @@ resource "azurerm_linux_virtual_machine" "vm" {
   zone                  = var.zone
   size                  = var.size
   user_data             = var.user_data
-  network_interface_ids = [ for interface in values(azurerm_network_interface.interface) : interface.id ]
+  network_interface_ids = [for interface in values(azurerm_network_interface.interface) : interface.id]
 
   disable_password_authentication = true
   admin_ssh_key {
     username   = var.admin_username
-    public_key = var.admin_ssh_key
+    public_key = var.admin_public_key
   }
 
   os_disk {

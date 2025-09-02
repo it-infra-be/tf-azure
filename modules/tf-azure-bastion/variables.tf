@@ -17,6 +17,7 @@ variable "sku" {
   description = "SKU for the Bastion Host."
   type        = string
   default     = "Developer"
+  nullable    = false
 
   validation {
     condition     = contains(["Developer", "Basic", "Standard", "Premium"], var.sku)
@@ -50,12 +51,14 @@ variable "copy_paste_enabled" {
   description = "Enable Copy/Paste feature for the Bastion Host."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "file_copy_enabled" {
   description = "Enable File Copy feature for the Bastion Host."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "scale_units" {
@@ -68,6 +71,7 @@ variable "session_recording_enabled" {
   description = "Enable session recording feature for the Bastion Host."
   type        = bool
   default     = false
+  nullable    = false
 }
 
 variable "zones" {

@@ -8,6 +8,11 @@ output "name" {
   value       = azurerm_linux_virtual_machine.vm.name
 }
 
+output "location" {
+  description = "The location of the Linux Virtual Machine."
+  value       = azurerm_linux_virtual_machine.vm.location
+}
+
 output "private_ip_address" {
   description = "The primary private IP address of the Linux Virtual Machine."
   value       = azurerm_linux_virtual_machine.vm.private_ip_address

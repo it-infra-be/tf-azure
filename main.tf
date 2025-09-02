@@ -1,118 +1,151 @@
 /*
- * # Terraform Azure: Resource Group
+ * # Terraform Azure
  *
  * This repository provides a collection of Terraform Azure Modules.
+ * This collection can be used to create an Azure Resource Group together with all its resources.
+ *
+ * Extra Information:
+ *   - Naming help: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
+ *   - Abbreviations: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
+ *   - Tagging: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
  */
 
-
-# Info: Naming help: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
-#       Abbreviations: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
-#       Tagging: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
-
+###
+# Resource Group configuration
+###
 resource "azurerm_resource_group" "rg" {
-  location = var.resource_group_location
-  name     = "rg-itinfra-dev"
+  name     = var.resource_group.name
+  location = var.resource_group.location
 }
 
-module "vnet" {
+###
+# NAT Gateways configuration
+###
+module "natgws" {
+  for_each = { for natgw in var.natgws : natgw.name => natgw }
+
+  source                  = "./modules/tf-azure-natgw"
+  resource_group_name     = azurerm_resource_group.rg.name
+  location                = each.value.location
+  name                    = each.key
+  idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
+  zone                    = each.value.zone
+  public_ips              = [for count in range(each.value.public_ip_count) : { name = "pip-${each.key}-${count + 1}" }]
+  public_ip_prefixes = each.value.public_ip_prefix_lengths != null ? [
+    for idx, prefix_length in each.value.public_ip_prefix_lengths : {
+      name   = "pippre-${each.key}-${idx + 1}"
+      length = prefix_length
+    }
+  ] : null
+}
+
+###
+# Network Security Groups configuration
+###
+module "nsgs" {
+  for_each = { for nsg in var.nsgs : nsg.name => nsg }
+
+  source              = "./modules/tf-azure-nsg"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = each.value.location
+  name                = each.key
+  rules               = each.value.rules
+}
+
+###
+# Virtual Networks configuration
+###
+module "vnets" {
+  for_each = { for vnet in var.vnets : vnet.name => vnet }
+
   source              = "./modules/tf-azure-vnet"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = "westeurope"
-  name                = "vnet-itinfra-dev-westeurope-001"
-  address_spaces      = ["10.0.0.0/16"]
+  location            = each.value.location
+  name                = each.key
+  address_spaces      = each.value.address_spaces
   subnets = [
+    for subnet in each.value.subnets :
     {
-      name = "snet-itinfra-dev-westeurope-001",
-      address_prefix = "10.0.1.0/24",
-      default_outbound_access_enabled = true
-      has_network_security_group = true
-      network_security_group_id = module.nsg.id
-      # has_nat_gateway = true
-      # nat_gateway_id = module.natgw.id
-    },
-    { name = "snet-itinfra-dev-westeurope-002", address_prefix = "10.0.2.0/24", default_outbound_access_enabled = false }
+      name                            = subnet.name
+      address_prefix                  = subnet.address_prefix
+      default_outbound_access_enabled = subnet.default_outbound_access_enabled
+      has_network_security_group      = subnet.network_security_group_name != null ? true : false
+      network_security_group_id       = subnet.network_security_group_name != null ? module.nsgs[subnet.network_security_group_name].id : null
+      has_nat_gateway                 = subnet.nat_gateway_name != null ? true : false
+      nat_gateway_id                  = subnet.nat_gateway_name != null ? module.natgws[subnet.nat_gateway_name].id : null
+    }
   ]
 }
 
-# module "natgw" {
-#   source              = "./modules/tf-azure-natgw"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = "westeurope"
-#   name                = "natgw-itinfra-dev-westeurope-001"
-#   public_ips = [
-#     {
-#       name = "pip-itinfra-dev-westeurope-natgw-001"
-#     }
-#   ]
-# }
+###
+# Bastion Hosts configuration
+###
+module "bastions" {
+  for_each = { for bastion in var.bastions : bastion.name => bastion }
 
-# module "bastion" {
-#   source              = "./modules/tf-azure-bastion"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = "westeurope"
-#   name                = "bastion-itinfra-dev-westeurope-001"
-#   sku                 = "Basic"
-#   public_ip_name      = "pip-itinfra-dev-westeurope-bastion-001"
-#   virtual_network_id  = module.vnet.id
-#   subnet_prefix       = "10.0.255.0/24"
-# }
+  source                    = "./modules/tf-azure-bastion"
+  resource_group_name       = azurerm_resource_group.rg.name
+  location                  = module.vnets[each.value.virtual_network_name].location
+  name                      = each.key
+  sku                       = each.value.sku
+  public_ip_name            = "pip-${each.key}"
+  virtual_network_id        = module.vnets[each.value.virtual_network_name].id
+  subnet_prefix             = each.value.subnet_prefix
+  copy_paste_enabled        = each.value.copy_paste_enabled
+  file_copy_enabled         = each.value.file_copy_enabled
+  scale_units               = each.value.scale_units
+  session_recording_enabled = each.value.session_recording_enabled
+  zones                     = each.value.zones
+}
 
-resource "azurerm_ssh_public_key" "sshkey" {
-  for_each = { for key in var.public_keys : key.name => key }
+###
+# Virtual Machines configuration
+###
+resource "azurerm_ssh_public_key" "sshkeys" {
+  for_each = { for sshkey in var.public_keys : sshkey.name => sshkey }
 
   name                = each.key
   resource_group_name = azurerm_resource_group.rg.name
-  location            = "westeurope"
+  location            = each.value.location
   public_key          = each.value.public_key
 }
 
-# module "vm" {
-#   source              = "./modules/tf-azure-vm"
-#   resource_group_name = azurerm_resource_group.rg.name
-#   location            = "westeurope"
-#   name                = "vm-itinfra-dev-westeurope-test001"
-#   admin_username      = "itinfra"
-#   admin_ssh_key       = azurerm_ssh_public_key.sshkey["sshkey-itinfra-dev-westeurope-001"].public_key
-#   size                = "Standard_B1s"
-#   interfaces = [{
-#     name = "nic-itinfra-dev-westeurope-test001-internal"
-#     ip_configurations = [{
-#       name      = "internal"
-#       subnet_id = module.vnet.subnets["snet-itinfra-dev-westeurope-001"].id
-#     }]
-#     network_security_group_id = module.nsg.id
-#   }]
-# }
+module "vms" {
+  for_each = { for vm in var.vms : vm.name => vm }
 
-module "nsg" {
-  source              = "./modules/tf-azure-nsg"
+  source              = "./modules/tf-azure-vm"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = "westeurope"
-  name                = "nsg-itinfra-dev-westeurope-nsg001"
-  rules = [
+  location            = module.vnets[each.value.virtual_network_name].location
+  name                = each.key
+  zone                = each.value.zone
+  admin_username      = each.value.admin_username
+  admin_public_key    = azurerm_ssh_public_key.sshkeys[each.value.admin_public_key_name].public_key
+  size                = each.value.size
+  user_data           = each.value.user_data
+  os_disk = merge(
+    { name = "osdisk-${each.key}" },
+    each.value.os_disk != null ? each.value.os_disk : {}
+  )
+  source_image_reference = each.value.source_image_reference
+  interfaces = [
+    for idx, interface in each.value.interfaces :
     {
-      name                       = "DenyAllIn"
-      description                = "Deny all inbound traffic"
-      priority                   = "4096"
-      direction                  = "Inbound"
-      access                     = "Deny"
-      protocol                   = "*"
-      source_address_prefix      = "*"
-      source_port_range          = "*"
-      destination_address_prefix = "*"
-      destination_port_range     = "*"
-    },
-    {
-      name                       = "DenyAllOut"
-      description                = "Deny all outbound traffic"
-      priority                   = "4096"
-      direction                  = "Outbound"
-      access                     = "Deny"
-      protocol                   = "*"
-      source_address_prefix      = "*"
-      source_port_range          = "*"
-      destination_address_prefix = "*"
-      destination_port_range     = "*"
+      name                           = "nic-${each.key}-${idx}"
+      ip_forwarding_enabled          = interface.ip_forwarding_enabled
+      accelerated_networking_enabled = interface.accelerated_networking_enabled
+      internal_dns_name_label        = interface.internal_dns_name_label
+      ip_configurations = [
+        for ip_configuration in interface.ip_configurations :
+        {
+          name                       = ip_configuration.name
+          subnet_id                  = module.vnets[module.vnets[each.value.virtual_network_name].name].subnets[ip_configuration.subnet_name].id
+          primary                    = ip_configuration.primary
+          private_ip_address_version = ip_configuration.private_ip_address_version
+          private_ip_address         = ip_configuration.private_ip_address
+          # TODO: public_ip_address_id       = module.pips[ip_configuration.public_ip_address_name].id
+        }
+      ]
+      network_security_group_id = interface.network_security_group_name != null ? module.nsgs[interface.network_security_group_name].id : null
     }
   ]
 }

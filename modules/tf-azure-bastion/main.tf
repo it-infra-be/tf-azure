@@ -37,7 +37,7 @@ resource "azurerm_bastion_host" "bastion" {
   resource_group_name       = var.resource_group_name
   copy_paste_enabled        = var.copy_paste_enabled
   file_copy_enabled         = var.file_copy_enabled
-  sku                       = var.sku
+  sku                       = coalesce(var.sku)
   scale_units               = var.scale_units
   session_recording_enabled = var.session_recording_enabled
   virtual_network_id        = var.sku == "Developer" ? var.virtual_network_id : null

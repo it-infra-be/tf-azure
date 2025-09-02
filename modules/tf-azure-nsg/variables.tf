@@ -33,7 +33,8 @@ variable "rules" {
     destination_port_range                     = optional(string)
     destination_port_ranges                    = optional(list(string))
   }))
-  default = []
+  default  = []
+  nullable = false
 
   validation {
     condition = alltrue([

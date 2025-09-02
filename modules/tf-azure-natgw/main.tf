@@ -13,7 +13,7 @@ resource "azurerm_nat_gateway" "natgw" {
   location                = var.location
   sku_name                = var.sku_name
   idle_timeout_in_minutes = var.idle_timeout_in_minutes
-  zones                   = var.zones
+  zones                   = var.zone != null ? [var.zone] : null
 }
 
 # Public IP Association

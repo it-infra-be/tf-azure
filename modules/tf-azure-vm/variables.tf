@@ -24,7 +24,7 @@ variable "admin_username" {
   type        = string
 }
 
-variable "admin_ssh_key" {
+variable "admin_public_key" {
   description = "Public SSH Key of the local administrator for the virtual machine."
   type        = string
 }
@@ -48,7 +48,8 @@ variable "os_disk" {
     caching              = optional(string, "ReadWrite")
     storage_account_type = optional(string, "Standard_LRS")
   })
-  default = {}
+  default  = {}
+  nullable = false
   validation {
     condition     = contains(["None", "ReadOnly", "ReadWrite"], var.os_disk.caching)
     error_message = "Caching must be 'None', 'ReadOnly' or 'ReadWrite'."
@@ -73,6 +74,7 @@ variable "source_image_reference" {
     sku       = "9-gen1"
     version   = "latest"
   }
+  nullable = false
 }
 
 variable "interfaces" {
@@ -90,7 +92,7 @@ variable "interfaces" {
       private_ip_address         = optional(string)
       public_ip_address_id       = optional(string)
     }))
-    has_network_security_group   = optional(bool, false)
-    network_security_group_id    = optional(string)
+    has_network_security_group = optional(bool, false)
+    network_security_group_id  = optional(string)
   }))
 }
