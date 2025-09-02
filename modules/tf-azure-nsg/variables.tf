@@ -1,20 +1,20 @@
 variable "resource_group_name" {
-  description = "Name of resource group to which the network security group belongs."
+  description = "Name of resource group to which the network security group belongs"
   type        = string
 }
 
 variable "name" {
-  description = "Name of the network security group."
+  description = "Name of the network security group"
   type        = string
 }
 
 variable "location" {
-  description = "Location of the network security group."
+  description = "Location of the network security group"
   type        = string
 }
 
 variable "rules" {
-  description = "Network security group rules."
+  description = "Network security group rules"
   type = list(object({
     name                                       = string
     description                                = string
@@ -40,18 +40,18 @@ variable "rules" {
     condition = alltrue([
       for rule in var.rules : contains(["Tcp", "Udp", "Icmp", "Esp", "Ah", "*"], rule.protocol)
     ])
-    error_message = "Protocol must be one of 'Tcp' or 'Udp' or 'Udp' or 'Udp'."
+    error_message = "Protocol must be one of 'Tcp' or 'Udp' or 'Udp' or 'Udp'"
   }
   validation {
     condition = alltrue([
       for rule in var.rules : contains(["Allow", "Deny"], rule.access)
     ])
-    error_message = "Access must be 'Allow' or 'Deny'."
+    error_message = "Access must be 'Allow' or 'Deny'"
   }
   validation {
     condition = alltrue([
       for rule in var.rules : contains(["Inbound", "Outbound"], rule.direction)
     ])
-    error_message = "Direction must be 'Inbound' or 'Outbound'."
+    error_message = "Direction must be 'Inbound' or 'Outbound'"
   }
 }

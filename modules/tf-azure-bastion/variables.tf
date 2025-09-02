@@ -1,27 +1,27 @@
 variable "resource_group_name" {
-  description = "Name of resource group to which the Bastion host belongs."
+  description = "Name of resource group to which the Bastion host belongs"
   type        = string
 }
 
 variable "name" {
-  description = "Name of the Bastion host."
+  description = "Name of the Bastion host"
   type        = string
 }
 
 variable "location" {
-  description = "Location of the Bastion host."
+  description = "Location of the Bastion host"
   type        = string
 }
 
 variable "sku" {
-  description = "SKU for the Bastion Host."
+  description = "SKU for the Bastion Host"
   type        = string
   default     = "Developer"
   nullable    = false
 
   validation {
     condition     = contains(["Developer", "Basic", "Standard", "Premium"], var.sku)
-    error_message = "SKU must be 'Developer', 'Basic', 'Standard' or 'Premium'."
+    error_message = "SKU must be 'Developer', 'Basic', 'Standard' or 'Premium'"
   }
 }
 
@@ -32,7 +32,7 @@ variable "public_ip_name" {
 }
 
 variable "virtual_network_id" {
-  description = "The Virtual Network ID for the Bastion host."
+  description = "The Virtual Network ID for the Bastion host"
   type        = string
 }
 

@@ -1,40 +1,40 @@
 variable "resource_group_name" {
-  description = "Name of resource group to which the NAT Gateway belongs."
+  description = "Name of resource group to which the NAT Gateway belongs"
   type        = string
 }
 
 variable "name" {
-  description = "Name of the NAT Gateway."
+  description = "Name of the NAT Gateway"
   type        = string
 }
 
 variable "location" {
-  description = "Location of the NAT Gateway."
+  description = "Location of the NAT Gateway"
   type        = string
 }
 
 variable "sku_name" {
-  description = "SKU Name of the NAT Gateway."
+  description = "SKU Name of the NAT Gateway"
   type        = string
   default     = "Standard"
   nullable    = false
 }
 
 variable "idle_timeout_in_minutes" {
-  description = "TCP idle timeout of the NAT Gateway."
+  description = "TCP idle timeout of the NAT Gateway"
   type        = number
   default     = 4
   nullable    = false
 }
 
 variable "zone" {
-  description = "Zone to which NAT Gateway belongs."
+  description = "Zone to which NAT Gateway belongs"
   type        = string
   default     = null
 }
 
 variable "public_ips" {
-  description = "Public IP addresses to associate with the NAT Gateway."
+  description = "Public IP addresses to associate with the NAT Gateway"
   type = list(object({
     name  = string
     zones = optional(list(string))
@@ -44,7 +44,7 @@ variable "public_ips" {
 }
 
 variable "public_ip_prefixes" {
-  description = "Public IP prefixes to associate with the NAT Gateway."
+  description = "Public IP prefixes to associate with the NAT Gateway"
   type = list(object({
     name   = string
     length = number
