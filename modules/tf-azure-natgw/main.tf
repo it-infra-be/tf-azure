@@ -18,38 +18,38 @@ resource "azurerm_nat_gateway" "natgw" {
 
 # Public IP Association
 resource "azurerm_public_ip" "pip" {
-  for_each = { for pip in var.public_ips : pip.name => pip }
+  count = length(var.public_ips)
 
-  name                    = each.key
+  name                    = var.public_ips[count.index].name
   location                = var.location
   resource_group_name     = var.resource_group_name
   allocation_method       = "Static"
   sku                     = "Standard"
-  zones                   = each.value.zones
+  zones                   = var.public_ips[count.index].zones
   idle_timeout_in_minutes = var.idle_timeout_in_minutes
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "pip_association" {
-  for_each = azurerm_public_ip.pip
+  count = length(azurerm_public_ip.pip)
 
   nat_gateway_id       = azurerm_nat_gateway.natgw.id
-  public_ip_address_id = each.value.id
+  public_ip_address_id = azurerm_public_ip.pip[count.index].id
 }
 
 # Public IP Prefix association
 resource "azurerm_public_ip_prefix" "pippre" {
-  for_each = { for pip_prefix in var.public_ip_prefixes : pip_prefix.name => pip_prefix }
+  count = length(var.public_ip_prefixes)
 
-  name                = each.key
+  name                = var.public_ip_prefixes[count.index].name
   location            = var.location
   resource_group_name = var.resource_group_name
-  prefix_length       = each.value.length
-  zones               = each.value.zones
+  prefix_length       = var.public_ip_prefixes[count.index].length
+  zones               = var.public_ip_prefixes[count.index].zones
 }
 
 resource "azurerm_nat_gateway_public_ip_prefix_association" "public_ip_prefix_association" {
-  for_each = azurerm_public_ip_prefix.pippre
+  count = length(azurerm_public_ip_prefix.pippre)
 
   nat_gateway_id      = azurerm_nat_gateway.natgw.id
-  public_ip_prefix_id = each.value.id
+  public_ip_prefix_id = azurerm_public_ip_prefix.pippre[count.index].id
 }

@@ -8,6 +8,12 @@ variable "name" {
   type        = string
 }
 
+variable "computer_name" {
+  description = "Hostname of the virtual machine (uses 'name' variable by default)"
+  type        = string
+  default     = null
+}
+
 variable "location" {
   description = "Location of the virtual machine"
   type        = string

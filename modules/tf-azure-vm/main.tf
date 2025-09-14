@@ -34,6 +34,7 @@ resource "azurerm_network_interface" "interface" {
 # Virtual Machine
 resource "azurerm_linux_virtual_machine" "vm" {
   name                  = var.name
+  computer_name         = var.computer_name
   resource_group_name   = var.resource_group_name
   location              = var.location
   admin_username        = var.admin_username

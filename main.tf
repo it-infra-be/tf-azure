@@ -11,11 +11,69 @@
  */
 
 ###
+# Local variables declaration
+###
+locals {
+  locations = {
+    "westeurope"         = "weu"
+    "northeurope"        = "neu"
+    "uksouth"            = "uks"
+    "ukwest"             = "ukw"
+    "francecentral"      = "frc"
+    "germanywestcentral" = "gwc"
+    "swedencentral"      = "sec"
+    "swedensouth"        = "ses"
+    "eastus"             = "eus"
+    "eastus2"            = "eus2"
+    "centralus"          = "cus"
+    "northcentralus"     = "ncus"
+    "southcentralus"     = "scus"
+    "westus"             = "wus"
+    "westus2"            = "wus2"
+    "westus3"            = "wus3"
+    "canadacentral"      = "cac"
+    "canadaeast"         = "cae"
+    "brazilsouth"        = "brs"
+    "brazilsoutheast"    = "brse"
+    "australiaeast"      = "aue"
+    "australiasoutheast" = "ause"
+    "australiacentral"   = "auc"
+    "australiacentral2"  = "auc2"
+    "japaneast"          = "jpe"
+    "japanwest"          = "jpw"
+    "koreacentral"       = "krc"
+    "koreasouth"         = "krs"
+    "southeastasia"      = "sea"
+    "eastasia"           = "eas"
+    "centralindia"       = "inc"
+    "southindia"         = "ins"
+    "westindia"          = "inw"
+    "southafricanorth"   = "zan"
+    "southafricawest"    = "zaw"
+    "uaenorth"           = "uaen"
+    "uaecentral"         = "uaec"
+  }
+  context = "${var.project}-${var.environment}-${local.locations[var.location]}"
+}
+
+###
 # Resource Group configuration
 ###
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group.name
-  location = var.resource_group.location
+  name     = "rg-${local.context}"
+  location = var.location # RG metadata location
+}
+
+# Public IPs
+resource "azurerm_public_ip" "pip" {
+  for_each = { for public_ip in var.public_ips : public_ip.name => public_ip }
+
+  name                = "pip-${local.context}-${each.key}"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = each.value.zones
 }
 
 ###
@@ -26,14 +84,17 @@ module "natgws" {
 
   source                  = "./modules/tf-azure-natgw"
   resource_group_name     = azurerm_resource_group.rg.name
-  location                = each.value.location
-  name                    = each.key
+  location                = var.location
+  name                    = "natgw-${local.context}-${each.key}"
   idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
   zone                    = each.value.zone
-  public_ips              = [for count in range(each.value.public_ip_count) : { name = "pip-${each.key}-${count + 1}" }]
+  public_ips = [for count in range(each.value.public_ip_count) :
+    { name = "pip-${local.context}-natgw-${each.key}-${count + 1}" }
+  ]
   public_ip_prefixes = each.value.public_ip_prefix_lengths != null ? [
-    for idx, prefix_length in each.value.public_ip_prefix_lengths : {
-      name   = "pippre-${each.key}-${idx + 1}"
+    for idx, prefix_length in each.value.public_ip_prefix_lengths :
+    {
+      name   = "pippre-${local.context}-natgw-${each.key}-${idx + 1}"
       length = prefix_length
     }
   ] : null
@@ -47,8 +108,8 @@ module "nsgs" {
 
   source              = "./modules/tf-azure-nsg"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = each.value.location
-  name                = each.key
+  location            = var.location
+  name                = "nsg-${local.context}-${each.key}"
   rules               = each.value.rules
 }
 
@@ -60,8 +121,8 @@ module "vnets" {
 
   source              = "./modules/tf-azure-vnet"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = each.value.location
-  name                = each.key
+  location            = var.location
+  name                = "vnet-${local.context}-${each.key}"
   address_spaces      = each.value.address_spaces
   subnets = [
     for subnet in each.value.subnets :
@@ -86,9 +147,9 @@ module "bastions" {
   source                    = "./modules/tf-azure-bastion"
   resource_group_name       = azurerm_resource_group.rg.name
   location                  = module.vnets[each.value.virtual_network_name].location
-  name                      = each.key
+  name                      = "bastion-${local.context}-${each.key}"
   sku                       = each.value.sku
-  public_ip_name            = "pip-${each.key}"
+  public_ip_name            = "pip-${local.context}-bastion-${each.key}"
   virtual_network_id        = module.vnets[each.value.virtual_network_name].id
   subnet_prefix             = each.value.subnet_prefix
   copy_paste_enabled        = each.value.copy_paste_enabled
@@ -104,9 +165,9 @@ module "bastions" {
 resource "azurerm_ssh_public_key" "sshkeys" {
   for_each = { for sshkey in var.public_keys : sshkey.name => sshkey }
 
-  name                = each.key
+  name                = "sshkey-${local.context}-${each.key}"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = each.value.location
+  location            = var.location
   public_key          = each.value.public_key
 }
 
@@ -116,33 +177,33 @@ module "vms" {
   source              = "./modules/tf-azure-vm"
   resource_group_name = azurerm_resource_group.rg.name
   location            = module.vnets[each.value.virtual_network_name].location
-  name                = each.key
+  name                = "vm-${local.context}-${each.key}"
   zone                = each.value.zone
   admin_username      = each.value.admin_username
   admin_public_key    = azurerm_ssh_public_key.sshkeys[each.value.admin_public_key_name].public_key
   size                = each.value.size
   user_data           = each.value.user_data
   os_disk = merge(
-    { name = "osdisk-${each.key}" },
+    { name = "osdisk-${local.context}-vm-${each.key}" },
     each.value.os_disk != null ? each.value.os_disk : {}
   )
   source_image_reference = each.value.source_image_reference
   interfaces = [
     for idx, interface in each.value.interfaces :
     {
-      name                           = "nic-${each.key}-${idx}"
+      name                           = "nic-${local.context}-vm-${each.key}-${idx}"
       ip_forwarding_enabled          = interface.ip_forwarding_enabled
       accelerated_networking_enabled = interface.accelerated_networking_enabled
       internal_dns_name_label        = interface.internal_dns_name_label
       ip_configurations = [
         for ip_configuration in interface.ip_configurations :
         {
-          name                       = ip_configuration.name
-          subnet_id                  = module.vnets[module.vnets[each.value.virtual_network_name].name].subnets[ip_configuration.subnet_name].id
+          name                       = ip_configuration.subnet_name
+          subnet_id                  = module.vnets[each.value.virtual_network_name].subnets[ip_configuration.subnet_name].id
           primary                    = ip_configuration.primary
           private_ip_address_version = ip_configuration.private_ip_address_version
           private_ip_address         = ip_configuration.private_ip_address
-          # TODO: public_ip_address_id       = module.pips[ip_configuration.public_ip_address_name].id
+          public_ip_addres_id        = ip_configuration.public_ip_address_name != null ? azurerm_public_ip.pip[ip_configuration.public_ip_address_name].id : null
         }
       ]
       network_security_group_id = interface.network_security_group_name != null ? module.nsgs[interface.network_security_group_name].id : null

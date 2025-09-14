@@ -1,16 +1,29 @@
-variable "resource_group" {
-  description = "Name of resource group"
-  type = object({
-    name     = string
-    location = string
-  })
+variable "project" {
+  description = "Name of project these resources belong to"
+}
+
+variable "environment" {
+  description = "Name of environment these resources belong to"
+}
+
+variable "location" {
+  description = "Location these resources belong to"
+}
+
+variable "public_ips" {
+  description = "Reserved static public IP addresses"
+  type = list(object({
+    name  = string
+    zones = optional(list(string), []) # [] = Zone-redundant
+  }))
+  default  = []
+  nullable = false
 }
 
 variable "nsgs" {
   description = "Network security groups and their rules"
   type = list(object({
-    name     = string
-    location = string
+    name = string
     rules = list(object({
       name                                       = string
       description                                = string
@@ -37,7 +50,6 @@ variable "natgws" {
   description = "NAT gateways"
   type = list(object({
     name                     = string
-    location                 = string
     sku_name                 = optional(string)
     idle_timeout_in_minutes  = optional(number)
     zone                     = optional(string)
@@ -51,7 +63,6 @@ variable "vnets" {
   description = "Network security groups and their rules"
   type = list(object({
     name           = string
-    location       = string
     address_spaces = list(string)
     subnets = list(object({
       name                            = string
@@ -84,7 +95,6 @@ variable "public_keys" {
   description = "SSH public keys"
   type = list(object({
     name       = string
-    location   = string
     public_key = string
   }))
 }
@@ -115,7 +125,6 @@ variable "vms" {
       accelerated_networking_enabled = optional(bool)
       internal_dns_name_label        = optional(string)
       ip_configurations = list(object({
-        name                       = string
         subnet_name                = string
         primary                    = optional(bool)
         private_ip_address_version = optional(string)
