@@ -2,12 +2,16 @@
 # Terraform Azure
 
 This repository provides a collection of Terraform Azure Modules.
-This collection can be used to create an Azure Resource Group together with all its resources.
 
-Extra Information:
-  - Naming help: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
-  - Abbreviations: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
-  - Tagging: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging
+This collection can also be used to create an Azure resource group together with all its resources.
+A resource group belongs to a project, environment and location and can be configured in a separate 'tfvars' file.
+
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.13.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.41 |
 
 ## Providers
 
@@ -44,5 +48,5 @@ Extra Information:
 
 | Name | Description |
 |------|-------------|
-| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Resource group name |
 <!-- END_TF_DOCS -->

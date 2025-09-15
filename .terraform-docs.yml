@@ -1,5 +1,5 @@
 # Terraform-docs configuration for root
-formatter: "markdown table"
+formatter: "markdown"
 header-from: "main.tf"
 footer-from: ""
 recursive:
@@ -7,6 +7,7 @@ recursive:
 sections:
   show:
     - header
+    - requirements
     - providers
     - modules
     - inputs
@@ -19,6 +20,6 @@ output:
     {{ .Content }}
     <!-- END_TF_DOCS -->
 sort:
-  enabled: true
+  enabled: false
   by: name
 

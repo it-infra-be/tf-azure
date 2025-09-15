@@ -2,8 +2,13 @@
  * # Terraform Azure
  *
  * This repository provides a collection of Terraform Azure Modules.
- * This collection can be used to create an Azure Resource Group together with all its resources.
  *
+ * This collection can also be used to create an Azure resource group together with all its resources.
+ * A resource group belongs to a project, environment and location and can be configured in a separate 'tfvars' file.
+ *
+ */
+
+/*
  * Extra Information:
  *   - Naming help: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming
  *   - Abbreviations: https://learn.microsoft.com/mt-mt/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
