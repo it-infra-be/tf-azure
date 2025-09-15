@@ -1,13 +1,16 @@
 variable "project" {
   description = "Name of project these resources belong to"
+  type        = string
 }
 
 variable "environment" {
   description = "Name of environment these resources belong to"
+  type        = string
 }
 
 variable "location" {
   description = "Location these resources belong to"
+  type        = string
 }
 
 variable "public_ips" {
@@ -60,7 +63,7 @@ variable "natgws" {
 }
 
 variable "vnets" {
-  description = "Network security groups and their rules"
+  description = "Virtual networks and their subnets"
   type = list(object({
     name           = string
     address_spaces = list(string)
