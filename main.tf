@@ -88,10 +88,10 @@ module "natgws" {
   name                    = "natgw-${local.context}-${each.key}"
   idle_timeout_in_minutes = each.value.idle_timeout_in_minutes
   zone                    = each.value.zone
-  public_ips = [for count in range(each.value.public_ip_count) :
+  new_public_ip_addresses = [for count in range(each.value.public_ip_address_count) :
     { name = "pip-${local.context}-natgw-${each.key}-${count + 1}" }
   ]
-  public_ip_prefixes = each.value.public_ip_prefix_lengths != null ? [
+  new_public_ip_prefixes = each.value.public_ip_prefix_lengths != null ? [
     for idx, prefix_length in each.value.public_ip_prefix_lengths :
     {
       name   = "pippre-${local.context}-natgw-${each.key}-${idx + 1}"
@@ -149,7 +149,7 @@ module "bastions" {
   location                  = module.vnets[each.value.virtual_network_name].location
   name                      = "bastion-${local.context}-${each.key}"
   sku                       = each.value.sku
-  public_ip_name            = "pip-${local.context}-bastion-${each.key}"
+  new_public_ip_address     = { name = "pip-${local.context}-bastion-${each.key}" }
   virtual_network_id        = module.vnets[each.value.virtual_network_name].id
   subnet_prefix             = each.value.subnet_prefix
   copy_paste_enabled        = each.value.copy_paste_enabled

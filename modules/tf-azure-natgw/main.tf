@@ -18,38 +18,46 @@ resource "azurerm_nat_gateway" "natgw" {
 
 # Public IP Association
 resource "azurerm_public_ip" "pip" {
-  count = length(var.public_ips)
+  count = length(var.new_public_ip_addresses)
 
-  name                    = var.public_ips[count.index].name
+  name                    = var.new_public_ip_addresses[count.index].name
   location                = var.location
   resource_group_name     = var.resource_group_name
   allocation_method       = "Static"
   sku                     = "Standard"
-  zones                   = var.public_ips[count.index].zones
+  zones                   = var.new_public_ip_addresses[count.index].zones
   idle_timeout_in_minutes = var.idle_timeout_in_minutes
 }
 
+locals {
+  all_public_ip_address_ids = concat(azurerm_public_ip.pip[*].id, var.public_ip_address_ids)
+}
+
 resource "azurerm_nat_gateway_public_ip_association" "pip_association" {
-  count = length(azurerm_public_ip.pip)
+  count = length(local.all_public_ip_address_ids)
 
   nat_gateway_id       = azurerm_nat_gateway.natgw.id
-  public_ip_address_id = azurerm_public_ip.pip[count.index].id
+  public_ip_address_id = local.all_public_ip_address_ids[count.index]
 }
 
 # Public IP Prefix association
 resource "azurerm_public_ip_prefix" "pippre" {
-  count = length(var.public_ip_prefixes)
+  count = length(var.new_public_ip_prefixes)
 
-  name                = var.public_ip_prefixes[count.index].name
+  name                = var.new_public_ip_prefixes[count.index].name
   location            = var.location
   resource_group_name = var.resource_group_name
-  prefix_length       = var.public_ip_prefixes[count.index].length
-  zones               = var.public_ip_prefixes[count.index].zones
+  prefix_length       = var.new_public_ip_prefixes[count.index].length
+  zones               = var.new_public_ip_prefixes[count.index].zones
+}
+
+locals {
+  all_public_ip_prefix_ids = concat(azurerm_public_ip_prefix.pippre[*].id, var.public_ip_prefix_ids)
 }
 
 resource "azurerm_nat_gateway_public_ip_prefix_association" "public_ip_prefix_association" {
-  count = length(azurerm_public_ip_prefix.pippre)
+  count = length(local.all_public_ip_prefix_ids)
 
   nat_gateway_id      = azurerm_nat_gateway.natgw.id
-  public_ip_prefix_id = azurerm_public_ip_prefix.pippre[count.index].id
+  public_ip_prefix_id = local.all_public_ip_prefix_ids[count.index]
 }

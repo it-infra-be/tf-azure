@@ -33,8 +33,8 @@ variable "zone" {
   default     = null
 }
 
-variable "public_ips" {
-  description = "Public IP addresses to associate with the NAT Gateway"
+variable "new_public_ip_addresses" {
+  description = "New public IP addresses to associate with the NAT Gateway"
   type = list(object({
     name  = string
     zones = optional(list(string))
@@ -43,8 +43,15 @@ variable "public_ips" {
   nullable = false
 }
 
-variable "public_ip_prefixes" {
-  description = "Public IP prefixes to associate with the NAT Gateway"
+variable "public_ip_address_ids" {
+  description = "Existing public IP addresses to associate with the NAT Gateway"
+  type        = list(string)
+  default     = []
+  nullable    = false
+}
+
+variable "new_public_ip_prefixes" {
+  description = "New public IP prefixes to associate with the NAT Gateway"
   type = list(object({
     name   = string
     length = number
@@ -52,4 +59,11 @@ variable "public_ip_prefixes" {
   }))
   default  = []
   nullable = false
+}
+
+variable "public_ip_prefix_ids" {
+  description = "Existing public IP prefixes to associate with the NAT Gateway"
+  type        = list(string)
+  default     = []
+  nullable    = false
 }

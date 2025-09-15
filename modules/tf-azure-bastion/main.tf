@@ -20,9 +20,9 @@ resource "azurerm_subnet" "snet" {
 
 # Public IP
 resource "azurerm_public_ip" "pip" {
-  count = var.public_ip_name != null ? 1 : 0
+  count = var.new_public_ip_address != null ? 1 : 0
 
-  name                = var.public_ip_name
+  name                = var.new_public_ip_address.name
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
@@ -49,7 +49,7 @@ resource "azurerm_bastion_host" "bastion" {
     content {
       name                 = "ipconf"
       subnet_id            = azurerm_subnet.snet[0].id
-      public_ip_address_id = var.public_ip_name != null ? azurerm_public_ip.pip[0].id : null
+      public_ip_address_id = var.new_public_ip_address != null ? azurerm_public_ip.pip[0].id : var.public_ip_address_id != null ? var.public_ip_address_id : null
     }
   }
 }

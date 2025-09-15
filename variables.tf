@@ -53,7 +53,7 @@ variable "natgws" {
     sku_name                 = optional(string)
     idle_timeout_in_minutes  = optional(number)
     zone                     = optional(string)
-    public_ip_count          = optional(number, 1)
+    public_ip_address_count  = optional(number, 1)
     public_ip_prefix_lengths = optional(list(number))
   }))
   default = []

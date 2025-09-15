@@ -25,10 +25,23 @@ variable "sku" {
   }
 }
 
-variable "public_ip_name" {
-  description = "The public IP name for the Bastion host. Private only if not provided. Not needed for SKU Developer."
+variable "new_public_ip_address" {
+  description = "New public IP for the Bastion host, instead of 'public_ip_address_id'. Not needed for SKU Developer."
+  type = object({
+    name = string
+  })
+  default = null
+}
+
+variable "public_ip_address_id" {
+  description = "Existing public IP ID for the Bastion host, instead of 'new_public_ip_address'. Not needed for SKU Developer."
   type        = string
   default     = null
+
+  validation {
+    condition     = !(var.new_public_ip_address != null && var.public_ip_address_id != null)
+    error_message = "Either a Public IP Address Name (new) or ID (existing) can be provided, not both!"
+  }
 }
 
 variable "virtual_network_id" {
