@@ -1,0 +1,25 @@
+# Terraform-docs configuration for root
+formatter: "markdown"
+header-from: "main.tf"
+footer-from: ""
+recursive:
+  enabled: false
+sections:
+  show:
+    - header
+    - requirements
+    - providers
+    - modules
+    - inputs
+    - outputs
+output:
+  file: "README.md"
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+sort:
+  enabled: false
+  by: name
+

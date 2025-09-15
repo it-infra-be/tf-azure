@@ -1,0 +1,25 @@
+# Terraform-docs configuration for modules
+formatter: "markdown table"
+header-from: "main.tf"
+footer-from: ""
+recursive:
+  enabled: true
+  path: .
+  include-main: false
+sections:
+  show:
+    - header
+    - providers
+    - inputs
+    - outputs
+output:
+  file: "README.md"
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+sort:
+  enabled: true
+  by: name
+
