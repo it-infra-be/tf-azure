@@ -15,73 +15,65 @@ variable "location" {
 
 variable "public_ips" {
   description = "Reserved static public IP addresses"
-  type = list(object({
-    name  = string
+  type = map(object({
     zones = optional(list(string), []) # [] = Zone-redundant
   }))
-  default  = []
+  default  = {}
   nullable = false
 }
 
 variable "nsgs" {
   description = "Network security groups and their rules"
-  type = list(object({
-    name = string
-    rules = list(object({
-      name                                       = string
-      description                                = string
-      priority                                   = number
-      direction                                  = string
-      access                                     = string
-      protocol                                   = string
-      source_address_prefix                      = optional(string)
-      source_address_prefixes                    = optional(list(string))
-      source_application_security_group_ids      = optional(list(string))
-      source_port_range                          = optional(string)
-      source_port_ranges                         = optional(list(string))
-      destination_address_prefix                 = optional(string)
-      destination_address_prefixes               = optional(list(string))
-      destination_application_security_group_ids = optional(list(string))
-      destination_port_range                     = optional(string)
-      destination_port_ranges                    = optional(list(string))
-    }))
-  }))
-  default = []
+  type = map(list(object({
+    name                                       = string
+    description                                = string
+    priority                                   = number
+    direction                                  = string
+    access                                     = string
+    protocol                                   = string
+    source_address_prefix                      = optional(string)
+    source_address_prefixes                    = optional(list(string))
+    source_application_security_group_ids      = optional(list(string))
+    source_port_range                          = optional(string)
+    source_port_ranges                         = optional(list(string))
+    destination_address_prefix                 = optional(string)
+    destination_address_prefixes               = optional(list(string))
+    destination_application_security_group_ids = optional(list(string))
+    destination_port_range                     = optional(string)
+    destination_port_ranges                    = optional(list(string))
+  })))
+  default = {}
 }
 
 variable "natgws" {
   description = "NAT gateways"
-  type = list(object({
-    name                     = string
+  type = map(object({
     sku_name                 = optional(string)
     idle_timeout_in_minutes  = optional(number)
     zone                     = optional(string)
     public_ip_address_count  = optional(number, 1)
     public_ip_prefix_lengths = optional(list(number))
   }))
-  default = []
+  default = {}
 }
 
 variable "vnets" {
   description = "Virtual networks and their subnets"
-  type = list(object({
-    name           = string
+  type = map(object({
     address_spaces = list(string)
-    subnets = list(object({
-      name                            = string
+    subnets = map(object({
       address_prefix                  = string
       default_outbound_access_enabled = optional(bool, false)
       network_security_group_name     = optional(string)
       nat_gateway_name                = optional(string)
     }))
   }))
-  default = []
+  default = {}
 }
 
 variable "bastions" {
   description = "Bastion Hosts"
-  type = list(object({
-    name                      = string
+  type = map(object({
     sku                       = optional(string)
     virtual_network_name      = string
     subnet_prefix             = optional(string)
@@ -91,21 +83,19 @@ variable "bastions" {
     session_recording_enabled = optional(bool)
     zones                     = optional(list(string))
   }))
-  default = []
+  default = {}
 }
 
 variable "public_keys" {
   description = "SSH public keys"
-  type = list(object({
-    name       = string
-    public_key = string
-  }))
+  type        = map(string)
 }
 
 variable "vms" {
   description = "Virtual machines"
-  type = list(object({
-    name                  = string
+  type = map(object({
+    domain                = optional(string)
+    aliases               = optional(list(string))
     virtual_network_name  = string
     zone                  = optional(string)
     admin_username        = string
@@ -137,5 +127,32 @@ variable "vms" {
       network_security_group_name = optional(string)
     }))
   }))
-  default = []
+  default = {}
+}
+
+variable "dns_zones" {
+  type = map(object({
+    a_records     = optional(map(list(string)), {})
+    aaaa_records  = optional(map(list(string)), {})
+    cname_records = optional(map(string), {})
+    ns_records    = optional(map(list(string)), {})
+    ptr_records   = optional(map(list(string)), {})
+    txt_records   = optional(map(list(string)), {})
+    mx_records = optional(map(list(object({
+      preference = number
+      exchange   = string
+    }))), {})
+    srv_records = optional(map(list(object({
+      priority = number
+      weight   = number
+      port     = number
+      target   = string
+    }))), {})
+    caa_records = optional(map(list(object({
+      flags = number
+      tag   = string
+      value = string
+    }))), {})
+  }))
+  default = null
 }
