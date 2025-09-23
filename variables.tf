@@ -13,6 +13,11 @@ variable "location" {
   type        = string
 }
 
+variable "base_domain" {
+  description = "The base DNS domain, resource group default domain: <environment>.<project>.<location>.<base_domain>"
+  type        = string
+}
+
 variable "public_ips" {
   description = "Reserved static public IP addresses"
   type = map(object({
@@ -94,7 +99,7 @@ variable "public_keys" {
 variable "vms" {
   description = "Virtual machines"
   type = map(object({
-    domain                = optional(string)
+    domain                = optional(string) # Default = resource group default domain
     aliases               = optional(list(string))
     virtual_network_name  = string
     zone                  = optional(string)

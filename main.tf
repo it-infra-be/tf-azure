@@ -58,7 +58,7 @@ locals {
     "uaenorth"           = "uaen"
     "uaecentral"         = "uaec"
   }
-  context = "${var.project}-${var.environment}-${local.locations[var.location]}"
+  context = "${var.environment}-${var.project}-${local.locations[var.location]}"
 }
 
 ###
@@ -220,35 +220,41 @@ module "vms" {
 # DNS Zones
 ###
 locals {
-  # Create VM a_records (DNS zone name -> A records)
+  # Default domain for this resource group
+  default_domain = "${var.environment}.${var.project}.${local.locations[var.location]}.${var.base_domain}"
+
+  # Add default domain to dns zones
+  dns_zones = merge({ (local.default_domain) = {} }, var.dns_zones)
+
+  # Create VM A records (DNS zone name -> A records)
   vm_a_records = {
-    for dns_zone_name, dns_zone_records in var.dns_zones : dns_zone_name => {
+    for dns_zone_name, dns_zone_records in local.dns_zones : dns_zone_name => {
       for vm_name, vm_value in var.vms : vm_name => [module.vms[vm_name].private_ip_address]
-      if (vm_value.domain == dns_zone_name)
+      if(vm_value.domain == dns_zone_name) || (vm_value.domain == null && dns_zone_name == local.default_domain)
     }
   }
 
-  # Create VM a_records (DNS zone name -> CNAME records)
-  vm_cname_records = { for dns_zone_name, dns_zone_records in var.dns_zones : dns_zone_name => merge([
+  # Create VM CNAME records (DNS zone name -> CNAME records)
+  vm_cname_records = { for dns_zone_name, dns_zone_records in local.dns_zones : dns_zone_name => merge([
     for vm_name, vm_value in var.vms : {
       for alias in vm_value.aliases : alias => vm_name
-      if vm_value.aliases != null }
-    if vm_value.domain == dns_zone_name ]...) }
+    if vm_value.aliases != null }
+  if(vm_value.domain == dns_zone_name) || (vm_value.domain == null && dns_zone_name == local.default_domain)]...) }
 }
 
 module "dns_zones" {
-  for_each = var.dns_zones
+  for_each = local.dns_zones
 
   source              = "./modules/tf-azure-dns-zone"
   resource_group_name = azurerm_resource_group.rg.name
   name                = each.key
-  a_records           = { for name, record in merge(each.value.a_records, local.vm_a_records[each.key]) : name => { records = record } }
-  aaaa_records        = { for name, record in each.value.aaaa_records : name => { records = record } }
-  ptr_records         = { for name, record in each.value.ptr_records : name => { records = record } }
-  cname_records       = { for name, record in merge(each.value.cname_records, local.vm_cname_records[each.key]) : name => { record = record } }
-  ns_records          = { for name, record in each.value.ns_records : name => { records = record } }
-  txt_records         = { for name, record in each.value.txt_records : name => { records = record } }
-  mx_records          = { for name, record in each.value.mx_records : name => { records = record } }
-  srv_records         = { for name, record in each.value.srv_records : name => { records = record } }
-  caa_records         = { for name, record in each.value.caa_records : name => { records = record } }
+  a_records           = { for name, record in merge(try(each.value.a_records, {}), local.vm_a_records[each.key]) : name => { records = record } }
+  aaaa_records        = { for name, record in try(each.value.aaaa_records, {}) : name => { records = record } }
+  ptr_records         = { for name, record in try(each.value.ptr_records, {}) : name => { records = record } }
+  cname_records       = { for name, record in merge(try(each.value.cname_records, {}), local.vm_cname_records[each.key]) : name => { record = record } }
+  ns_records          = { for name, record in try(each.value.ns_records, {}) : name => { records = record } }
+  txt_records         = { for name, record in try(each.value.txt_records, {}) : name => { records = record } }
+  mx_records          = { for name, record in try(each.value.mx_records, {}) : name => { records = record } }
+  srv_records         = { for name, record in try(each.value.srv_records, {}) : name => { records = record } }
+  caa_records         = { for name, record in try(each.value.caa_records, {}) : name => { records = record } }
 }

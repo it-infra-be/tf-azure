@@ -1,6 +1,7 @@
 project     = "itinfra"
 environment = "test"
 location    = "westeurope"
+base_domain = "example.com"
 
 public_keys = {
   "default" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAXE0oiFQ+Iu7aP43EE32H1wp2SpqpqOw99OPw78wRxw"
@@ -72,7 +73,6 @@ bastions = {
 
 vms = {
   "vm001" = {
-    domain                = "example.com"
     aliases = [
       "vm-test1",
       "vm-test2"
@@ -94,8 +94,8 @@ vms = {
     ]
   }
   "vm002" = {
-    domain                = "example2.com"
-    aliases               = [
+    domain = "example2.com"
+    aliases = [
       "test5"
     ]
     admin_username        = "itinfra"
@@ -117,7 +117,7 @@ vms = {
 }
 
 dns_zones = {
-  "example.com" = {
+  "test.itinfra.weu.example.com" = {
     a_records = {
       "test" = ["10.10.10.10"]
     }
