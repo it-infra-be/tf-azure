@@ -8,6 +8,22 @@ variable "name" {
   type        = string
 }
 
+variable "soa_record" {
+  description = "DNS SOA record for the zone"
+  type = object({
+    email         = string
+    host_name     = optional(string)
+    expire_time   = optional(number)
+    minimum_ttl   = optional(number)
+    refresh_time  = optional(number)
+    retry_time    = optional(number)
+    serial_number = optional(number)
+    ttl           = optional(number)
+  })
+  default  = null
+  nullable = true
+}
+
 variable "a_records" {
   description = "DNS A records for the zone"
   type = map(object({

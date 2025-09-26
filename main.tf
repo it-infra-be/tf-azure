@@ -248,6 +248,7 @@ module "dns_zones" {
   source              = "./modules/tf-azure-dns-zone"
   resource_group_name = azurerm_resource_group.rg.name
   name                = each.key
+  soa_record          = each.value.soa_record
   a_records           = { for name, record in merge(try(each.value.a_records, {}), local.vm_a_records[each.key]) : name => { records = record } }
   aaaa_records        = { for name, record in try(each.value.aaaa_records, {}) : name => { records = record } }
   ptr_records         = { for name, record in try(each.value.ptr_records, {}) : name => { records = record } }

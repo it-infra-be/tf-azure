@@ -137,6 +137,16 @@ variable "vms" {
 
 variable "dns_zones" {
   type = map(object({
+    soa_record = optional(object({
+      email         = string
+      host_name     = optional(string)
+      expire_time   = optional(number)
+      minimum_ttl   = optional(number)
+      refresh_time  = optional(number)
+      retry_time    = optional(number)
+      serial_number = optional(number)
+      ttl           = optional(number)
+    }))
     a_records     = optional(map(list(string)), {})
     aaaa_records  = optional(map(list(string)), {})
     cname_records = optional(map(string), {})
