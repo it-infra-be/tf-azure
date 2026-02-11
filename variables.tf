@@ -94,6 +94,7 @@ variable "bastions" {
 variable "public_keys" {
   description = "SSH public keys"
   type        = map(string)
+  default     = {}
 }
 
 variable "vms" {
