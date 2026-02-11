@@ -58,7 +58,7 @@ locals {
     "uaenorth"           = "uaen"
     "uaecentral"         = "uaec"
   }
-  context = "${var.project}-${var.environment}-${local.locations[var.location]}"
+  context = "${var.environment}-${var.project}-${local.locations[var.location]}"
 }
 
 ###
@@ -71,7 +71,7 @@ resource "azurerm_resource_group" "rg" {
 
 # Public IPs
 resource "azurerm_public_ip" "pip" {
-  for_each = { for public_ip in var.public_ips : public_ip.name => public_ip }
+  for_each = var.public_ips
 
   name                = "pip-${local.context}-${each.key}"
   location            = var.location
@@ -85,7 +85,7 @@ resource "azurerm_public_ip" "pip" {
 # NAT Gateways configuration
 ###
 module "natgws" {
-  for_each = { for natgw in var.natgws : natgw.name => natgw }
+  for_each = var.natgws
 
   source                  = "./modules/tf-azure-natgw"
   resource_group_name     = azurerm_resource_group.rg.name
@@ -109,20 +109,20 @@ module "natgws" {
 # Network Security Groups configuration
 ###
 module "nsgs" {
-  for_each = { for nsg in var.nsgs : nsg.name => nsg }
+  for_each = var.nsgs
 
   source              = "./modules/tf-azure-nsg"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   name                = "nsg-${local.context}-${each.key}"
-  rules               = each.value.rules
+  rules               = each.value
 }
 
 ###
 # Virtual Networks configuration
 ###
 module "vnets" {
-  for_each = { for vnet in var.vnets : vnet.name => vnet }
+  for_each = var.vnets
 
   source              = "./modules/tf-azure-vnet"
   resource_group_name = azurerm_resource_group.rg.name
@@ -130,15 +130,15 @@ module "vnets" {
   name                = "vnet-${local.context}-${each.key}"
   address_spaces      = each.value.address_spaces
   subnets = [
-    for subnet in each.value.subnets :
+    for subnet_key, subnet_value in each.value.subnets :
     {
-      name                            = subnet.name
-      address_prefix                  = subnet.address_prefix
-      default_outbound_access_enabled = subnet.default_outbound_access_enabled
-      has_network_security_group      = subnet.network_security_group_name != null ? true : false
-      network_security_group_id       = subnet.network_security_group_name != null ? module.nsgs[subnet.network_security_group_name].id : null
-      has_nat_gateway                 = subnet.nat_gateway_name != null ? true : false
-      nat_gateway_id                  = subnet.nat_gateway_name != null ? module.natgws[subnet.nat_gateway_name].id : null
+      name                            = subnet_key
+      address_prefix                  = subnet_value.address_prefix
+      default_outbound_access_enabled = subnet_value.default_outbound_access_enabled
+      has_network_security_group      = subnet_value.network_security_group_name != null ? true : false
+      network_security_group_id       = subnet_value.network_security_group_name != null ? module.nsgs[subnet_value.network_security_group_name].id : null
+      has_nat_gateway                 = subnet_value.nat_gateway_name != null ? true : false
+      nat_gateway_id                  = subnet_value.nat_gateway_name != null ? module.natgws[subnet_value.nat_gateway_name].id : null
     }
   ]
 }
@@ -147,7 +147,7 @@ module "vnets" {
 # Bastion Hosts configuration
 ###
 module "bastions" {
-  for_each = { for bastion in var.bastions : bastion.name => bastion }
+  for_each = var.bastions
 
   source                    = "./modules/tf-azure-bastion"
   resource_group_name       = azurerm_resource_group.rg.name
@@ -168,16 +168,16 @@ module "bastions" {
 # Virtual Machines configuration
 ###
 resource "azurerm_ssh_public_key" "sshkeys" {
-  for_each = { for sshkey in var.public_keys : sshkey.name => sshkey }
+  for_each = var.public_keys
 
   name                = "sshkey-${local.context}-${each.key}"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
-  public_key          = each.value.public_key
+  public_key          = each.value
 }
 
 module "vms" {
-  for_each = { for vm in var.vms : vm.name => vm }
+  for_each = var.vms
 
   source              = "./modules/tf-azure-vm"
   resource_group_name = azurerm_resource_group.rg.name
@@ -214,4 +214,48 @@ module "vms" {
       network_security_group_id = interface.network_security_group_name != null ? module.nsgs[interface.network_security_group_name].id : null
     }
   ]
+}
+
+###
+# DNS Zones
+###
+locals {
+  # Default domain for this resource group
+  default_domain = "${var.environment}.${var.project}.${local.locations[var.location]}.${var.base_domain}"
+
+  # Add default domain to dns zones
+  dns_zones = merge({ (local.default_domain) = {} }, var.dns_zones)
+
+  # Create VM A records (DNS zone name -> A records)
+  vm_a_records = {
+    for dns_zone_name, dns_zone_records in local.dns_zones : dns_zone_name => {
+      for vm_name, vm_value in var.vms : vm_name => [module.vms[vm_name].private_ip_address]
+      if(vm_value.domain == dns_zone_name) || (vm_value.domain == null && dns_zone_name == local.default_domain)
+    }
+  }
+
+  # Create VM CNAME records (DNS zone name -> CNAME records)
+  vm_cname_records = { for dns_zone_name, dns_zone_records in local.dns_zones : dns_zone_name => merge([
+    for vm_name, vm_value in var.vms : {
+      for alias in vm_value.aliases : alias => vm_name
+    if vm_value.aliases != null }
+  if(vm_value.domain == dns_zone_name) || (vm_value.domain == null && dns_zone_name == local.default_domain)]...) }
+}
+
+module "dns_zones" {
+  for_each = local.dns_zones
+
+  source              = "./modules/tf-azure-dns-zone"
+  resource_group_name = azurerm_resource_group.rg.name
+  name                = each.key
+  soa_record          = each.value.soa_record
+  a_records           = { for name, record in merge(try(each.value.a_records, {}), local.vm_a_records[each.key]) : name => { records = record } }
+  aaaa_records        = { for name, record in try(each.value.aaaa_records, {}) : name => { records = record } }
+  ptr_records         = { for name, record in try(each.value.ptr_records, {}) : name => { records = record } }
+  cname_records       = { for name, record in merge(try(each.value.cname_records, {}), local.vm_cname_records[each.key]) : name => { record = record } }
+  ns_records          = { for name, record in try(each.value.ns_records, {}) : name => { records = record } }
+  txt_records         = { for name, record in try(each.value.txt_records, {}) : name => { records = record } }
+  mx_records          = { for name, record in try(each.value.mx_records, {}) : name => { records = record } }
+  srv_records         = { for name, record in try(each.value.srv_records, {}) : name => { records = record } }
+  caa_records         = { for name, record in try(each.value.caa_records, {}) : name => { records = record } }
 }
