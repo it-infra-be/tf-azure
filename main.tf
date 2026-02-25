@@ -224,7 +224,7 @@ locals {
   default_domain = "${var.environment}.${var.project}.${local.locations[var.location]}.${var.base_domain}"
 
   # Add default domain to dns zones
-  dns_zones = merge({ (local.default_domain) = {} }, var.dns_zones)
+  dns_zones = merge(var.create_default_domain ? { (local.default_domain) = {} } : {}, var.dns_zones)
 
   # Create VM A records (DNS zone name -> A records)
   vm_a_records = {
@@ -248,7 +248,7 @@ module "dns_zones" {
   source              = "./modules/tf-azure-dns-zone"
   resource_group_name = azurerm_resource_group.rg.name
   name                = each.key
-  soa_record          = each.value.soa_record
+  soa_record          = try(each.value.soa_record, null)
   a_records           = { for name, record in merge(try(each.value.a_records, {}), local.vm_a_records[each.key]) : name => { records = record } }
   aaaa_records        = { for name, record in try(each.value.aaaa_records, {}) : name => { records = record } }
   ptr_records         = { for name, record in try(each.value.ptr_records, {}) : name => { records = record } }
@@ -258,4 +258,18 @@ module "dns_zones" {
   mx_records          = { for name, record in try(each.value.mx_records, {}) : name => { records = record } }
   srv_records         = { for name, record in try(each.value.srv_records, {}) : name => { records = record } }
   caa_records         = { for name, record in try(each.value.caa_records, {}) : name => { records = record } }
+}
+
+module "vpns" {
+  for_each = var.vpns
+
+  source                  = "./modules/tf-azure-vpn"
+  resource_group_name     = azurerm_resource_group.rg.name
+  name                    = each.key
+  location                = var.location
+  virtual_network_id      = module.vnets[each.value.virtual_network_name].id
+  subnet_prefix           = each.value.subnet_prefix
+  virtual_network_gateway = each.value.virtual_network_gateway
+  local_network_gateways  = each.value.local_network_gateways
+  connections             = each.value.connections
 }
