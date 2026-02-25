@@ -46,7 +46,7 @@ variable "virtual_network_gateway" {
 }
 
 variable "local_network_gateways" {
-  description = "Configuration of local network gateways"
+  description = "Configuration of local network gateways to connect to the virtual network gateway"
   type = map(object({
     gateway_address = optional(string)
     gateway_fqdn = optional(string)
@@ -60,7 +60,7 @@ variable "local_network_gateways" {
 }
 
 variable "connections" {
-  description = "Configuration of VPN connections"
+  description = "Configuration of VPN connections for the virtual network gateway"
   type = map(object({
     dpd_timeout_seconds = optional(number)
     local_network_gateway_name = string
