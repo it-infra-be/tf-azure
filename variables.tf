@@ -138,8 +138,8 @@ variable "vms" {
 
 variable "create_default_domain" {
   description = "Create default domain based on base_domain, location, project and environment."
-  type = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "dns_zones" {
@@ -183,54 +183,54 @@ variable "dns_zones" {
 variable "vpns" {
   description = "Virtual Private Networks"
   type = list(object({
-    virtual_network_name      = string
+    virtual_network_name = string
 
-    virtual_network_gateway   = object({
-      generation = optional(string, "Generation1")
-      sku = optional(string, "VpnGw1AZ")
+    virtual_network_gateway = object({
+      generation    = optional(string, "Generation1")
+      sku           = optional(string, "VpnGw1AZ")
       active_active = optional(string, true)
       custom_route = optional(object({
         address_prefixes = list(string)
       }))
       bgp = optional(object({
-        asn = number
+        asn         = number
         peer_weight = optional(number)
       }))
       instances = map(object({
         public_ip_address_name = optional(string)
-        public_ip_address_id = optional(string)
-        bgp_apipa_addresses = optional(list(string))
+        public_ip_address_id   = optional(string)
+        bgp_apipa_addresses    = optional(list(string))
       }))
     })
 
     local_network_gateways = optional(map(object({
       gateway_address = optional(string)
-      gateway_fqdn = optional(string)
-      address_space = list(string)
+      gateway_fqdn    = optional(string)
+      address_space   = list(string)
       bgp_peer = optional(map(object({
-        asn = number
+        asn         = number
         peer_weight = optional(number)
       })))
       connection = object({
         dpd_timeout_seconds = optional(number)
-        shared_key = string
+        shared_key          = string
         connection_protocol = optional(string, "IKEv2")
-        enable_bgp = optional(bool, false)
+        enable_bgp          = optional(bool, false)
 
         custom_bgp_addresses = optional(object({
-          primary = string
+          primary   = string
           secondary = optional(string)
         }))
 
         ipsec_policy = optional(object({
-          dh_group = string
-          ike_encryption  = string
-          ike_integrity  = string
+          dh_group         = string
+          ike_encryption   = string
+          ike_integrity    = string
           ipsec_encryption = string
           ipsec_integrity  = string
-          pfs_group  = string
-          sa_datasize  = optional(number)
-          sa_lifetime  = optional(number)
+          pfs_group        = string
+          sa_datasize      = optional(number)
+          sa_lifetime      = optional(number)
         }))
       })
     })), {})

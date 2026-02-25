@@ -55,7 +55,7 @@ vnets = {
         address_prefix                  = "10.0.1.0/24",
         default_outbound_access_enabled = true
         network_security_group_name     = "default"
-#        nat_gateway_name                = "default"
+        #        nat_gateway_name                = "default"
       },
       "private" = {
         address_prefix                  = "10.0.2.0/24",
@@ -65,17 +65,20 @@ vnets = {
         address_prefix                  = "10.0.254.0/24",
         default_outbound_access_enabled = false
       }
+      "AzureBastionSubnet" = {
+        address_prefix                  = "10.0.255.0/24",
+        default_outbound_access_enabled = false
+      }
     }
   }
 }
 
-# bastions = {
-#   "basic001" = {
-#     sku                  = "Basic"
-#     virtual_network_name = "default"
-#     subnet_prefix        = "10.0.255.0/24"
-#   }
-# }
+bastions = {
+  "basic001" = {
+    sku                  = "Basic"
+    virtual_network_name = "default"
+  }
+}
 
 vms = {
   "vm001" = {
@@ -91,7 +94,7 @@ vms = {
       {
         ip_configurations = [
           {
-            subnet_name            = "private"
+            subnet_name = "private"
             #public_ip_address_name = "vm001"
           }
         ]
@@ -99,27 +102,27 @@ vms = {
       }
     ]
   }
-#   "vm002" = {
-#     domain = "example2.com"
-#     aliases = [
-#       "test5"
-#     ]
-#     admin_username        = "itinfra"
-#     admin_public_key_name = "default"
-#     size                  = "Standard_B1s"
-#     virtual_network_name  = "default"
-#     interfaces = [
-#       {
-#         ip_configurations = [
-#           {
-#             subnet_name            = "public"
-#             public_ip_address_name = "vm001"
-#           }
-#         ]
-#         network_security_group = "default"
-#       }
-#     ]
-#   }
+  #   "vm002" = {
+  #     domain = "example2.com"
+  #     aliases = [
+  #       "test5"
+  #     ]
+  #     admin_username        = "itinfra"
+  #     admin_public_key_name = "default"
+  #     size                  = "Standard_B1s"
+  #     virtual_network_name  = "default"
+  #     interfaces = [
+  #       {
+  #         ip_configurations = [
+  #           {
+  #             subnet_name            = "public"
+  #             public_ip_address_name = "vm001"
+  #           }
+  #         ]
+  #         network_security_group = "default"
+  #       }
+  #     ]
+  #   }
 }
 
 # dns_zones = {
@@ -140,11 +143,11 @@ vms = {
 
 vpns = [
   {
-    virtual_network_name  = "default"
+    virtual_network_name = "default"
 
     virtual_network_gateway = {
-      generation = "Generation1"
-      sku = "VpnGw1AZ"
+      generation    = "Generation1"
+      sku           = "VpnGw1AZ"
       active_active = true
       # bgp = {
       #   asn = 65001
@@ -164,7 +167,7 @@ vpns = [
     local_network_gateways = {
       "home" = {
         gateway_address = "213.118.249.152"
-        address_space   = [
+        address_space = [
           "192.168.1.0/24"
         ]
         # bgp_peer = {
@@ -172,22 +175,22 @@ vpns = [
         # }
         connection = {
           #dpd_timeout_seconds = optional(number)
-          shared_key = "kfroi5939flrikd39"
+          shared_key          = "kfroi5939flrikd39"
           connection_protocol = "IKEv2"
-          enable_bgp = false
+          enable_bgp          = false
 
           # custom_bgp_addresses = {
           #   primary = string
           #   secondary = optional(string)
           # }
           ipsec_policy = {
-            dh_group = "DHGroup14"
-            ike_encryption  = "GCMAES256"
-            ike_integrity  = "SHA384"
+            dh_group         = "DHGroup14"
+            ike_encryption   = "GCMAES256"
+            ike_integrity    = "SHA384"
             ipsec_encryption = "GCMAES256"
             ipsec_integrity  = "GCMAES256"
-            pfs_group  = "None"
-            sa_lifetime  = 27000
+            pfs_group        = "None"
+            sa_lifetime      = 27000
           }
         }
       }

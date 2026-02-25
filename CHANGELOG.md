@@ -7,6 +7,7 @@
 ### Improvements
 
 - Make default domain zone creation optional
+- [BREAKING] Removed automatic AzureBastionSubnet creation
 
 ## [1.1.0] - 2025-09-24
 

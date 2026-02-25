@@ -156,7 +156,7 @@ module "bastions" {
   sku                       = each.value.sku
   new_public_ip_address     = { name = "pip-${local.context}-bastion-${each.key}" }
   virtual_network_id        = module.vnets[each.value.virtual_network_name].id
-  subnet_prefix             = each.value.subnet_prefix
+  subnet_id                 = module.vnets[each.value.virtual_network_name].subnets["AzureBastionSubnet"].id
   copy_paste_enabled        = each.value.copy_paste_enabled
   file_copy_enabled         = each.value.file_copy_enabled
   scale_units               = each.value.scale_units
@@ -276,19 +276,19 @@ locals {
 module "vpns" {
   for_each = { for vpn in var.vpns : vpn.virtual_network_name => vpn }
 
-  source                  = "./modules/tf-azure-vpn"
-  resource_group_name     = azurerm_resource_group.rg.name
-  location                = var.location
+  source              = "./modules/tf-azure-vpn"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
   virtual_network_gateway = merge(each.value.virtual_network_gateway, {
-    name         = "vgw-${local.context}-${each.value.virtual_network_name}"
-    subnet_id    = module.vnets[each.value.virtual_network_name].subnets["GatewaySubnet"].id
+    name      = "vgw-${local.context}-${each.value.virtual_network_name}"
+    subnet_id = module.vnets[each.value.virtual_network_name].subnets["GatewaySubnet"].id
   })
-  local_network_gateways  =  [ for lgw_name, lgw in each.value.local_network_gateways: merge(
-    lgw, { name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}"}
+  local_network_gateways = [for lgw_name, lgw in each.value.local_network_gateways : merge(
+    lgw, { name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}" }
   )]
-  connections = [ for lgw_name, vcn in local.connections: merge(
+  connections = [for lgw_name, vcn in local.connections : merge(
     vcn, {
-      name = "vcn-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
+      name                       = "vcn-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
       local_network_gateway_name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
     }
   )]
