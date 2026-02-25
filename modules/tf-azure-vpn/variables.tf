@@ -3,33 +3,19 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "name" {
-  description = "Name of the vpn connection"
-  type        = string
-}
-
 variable "location" {
   description = "Location of the vpn connection"
   type        = string
 }
 
-variable "virtual_network_id" {
-  description = "The Virtual Network ID for the vpn connection"
-  type        = string
-}
-
-variable "subnet_prefix" {
-  description = "The subnet prefix to place the vpn connection in"
-  type        = string
-  default     = null
-}
-
 variable "virtual_network_gateway" {
   description = "Configuration of the virtual network gateway"
   type = object({
+    name = string
     generation = optional(string, "Generation1")
     sku = optional(string, "VpnGw1AZ")
     active_active = optional(string, true)
+    subnet_id = string
     custom_route = optional(object({
       address_prefixes = list(string)
     }))
@@ -46,8 +32,9 @@ variable "virtual_network_gateway" {
 }
 
 variable "local_network_gateways" {
-  description = "Configuration of local network gateways to connect to the virtual network gateway"
-  type = map(object({
+  description = "Configuration of local network gateways"
+  type = list(object({
+    name = string
     gateway_address = optional(string)
     gateway_fqdn = optional(string)
     address_space = list(string)
@@ -56,16 +43,18 @@ variable "local_network_gateways" {
       peer_weight = optional(number)
     })))
   }))
-  default = {}
+  default = []
 }
 
 variable "connections" {
-  description = "Configuration of VPN connections for the virtual network gateway"
-  type = map(object({
+  description = "Configuration of VPN connections for the virtual network gateway and its local network gateways"
+  type = list(object({
+    name =string
     dpd_timeout_seconds = optional(number)
     local_network_gateway_name = string
     shared_key = string
     connection_protocol = optional(string, "IKEv2")
+    enable_bgp = optional(bool, false)
 
     custom_bgp_addresses = optional(object({
       primary = string
@@ -83,5 +72,5 @@ variable "connections" {
       sa_lifetime  = optional(number)
     }))
   }))
-  default = {}
+  default = []
 }

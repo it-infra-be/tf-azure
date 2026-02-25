@@ -61,6 +61,10 @@ vnets = {
         address_prefix                  = "10.0.2.0/24",
         default_outbound_access_enabled = false
       }
+      "GatewaySubnet" = {
+        address_prefix                  = "10.0.254.0/24",
+        default_outbound_access_enabled = false
+      }
     }
   }
 }
@@ -134,10 +138,9 @@ vms = {
 #   }
 # }
 
-vpns = {
-  "fortigate" = {
+vpns = [
+  {
     virtual_network_name  = "default"
-    subnet_prefix = "10.0.254.0/24"
 
     virtual_network_gateway = {
       generation = "Generation1"
@@ -159,7 +162,7 @@ vpns = {
     }
 
     local_network_gateways = {
-      "fortigate" = {
+      "home" = {
         gateway_address = "213.118.249.152"
         address_space   = [
           "192.168.1.0/24"
@@ -167,32 +170,27 @@ vpns = {
         # bgp_peer = {
         #   asn = 65002
         # }
-      }
-    }
+        connection = {
+          #dpd_timeout_seconds = optional(number)
+          shared_key = "kfroi5939flrikd39"
+          connection_protocol = "IKEv2"
+          enable_bgp = false
 
-    connections = {
-      "tunnel1" = {
-        #dpd_timeout_seconds = optional(number)
-        local_network_gateway_name = "fortigate"
-        shared_key = "kfroi5939flrikd39"
-        connection_protocol = "IKEv2"
-
-        # custom_bgp_addresses = {
-        #   primary = string
-        #   secondary = optional(string)
-        # }
-        ipsec_policy = {
-          dh_group = "DHGroup14"
-          ike_encryption  = "GCMAES256"
-          ike_integrity  = "SHA384"
-          ipsec_encryption = "GCMAES256"
-          ipsec_integrity  = "GCMAES256"
-          pfs_group  = "None"
-          sa_lifetime  = 27000
+          # custom_bgp_addresses = {
+          #   primary = string
+          #   secondary = optional(string)
+          # }
+          ipsec_policy = {
+            dh_group = "DHGroup14"
+            ike_encryption  = "GCMAES256"
+            ike_integrity  = "SHA384"
+            ipsec_encryption = "GCMAES256"
+            ipsec_integrity  = "GCMAES256"
+            pfs_group  = "None"
+            sa_lifetime  = 27000
+          }
         }
       }
     }
   }
-}
-
-
+]

@@ -260,16 +260,36 @@ module "dns_zones" {
   caa_records         = { for name, record in try(each.value.caa_records, {}) : name => { records = record } }
 }
 
+###
+# VPN Tunnels
+###
+locals {
+  # Get connections from local network gateways
+  connections = merge([
+    for vpn_key, vpn in var.vpns : {
+      for lgw_key, lgw in vpn.local_network_gateways :
+      lgw_key => lgw.connection
+    }
+  ]...)
+}
+
 module "vpns" {
-  for_each = var.vpns
+  for_each = { for vpn in var.vpns : vpn.virtual_network_name => vpn }
 
   source                  = "./modules/tf-azure-vpn"
   resource_group_name     = azurerm_resource_group.rg.name
-  name                    = each.key
   location                = var.location
-  virtual_network_id      = module.vnets[each.value.virtual_network_name].id
-  subnet_prefix           = each.value.subnet_prefix
-  virtual_network_gateway = each.value.virtual_network_gateway
-  local_network_gateways  = each.value.local_network_gateways
-  connections             = each.value.connections
+  virtual_network_gateway = merge(each.value.virtual_network_gateway, {
+    name         = "vgw-${local.context}-${each.value.virtual_network_name}"
+    subnet_id    = module.vnets[each.value.virtual_network_name].subnets["GatewaySubnet"].id
+  })
+  local_network_gateways  =  [ for lgw_name, lgw in each.value.local_network_gateways: merge(
+    lgw, { name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}"}
+  )]
+  connections = [ for lgw_name, vcn in local.connections: merge(
+    vcn, {
+      name = "vcn-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
+      local_network_gateway_name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
+    }
+  )]
 }

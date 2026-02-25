@@ -182,9 +182,8 @@ variable "dns_zones" {
 
 variable "vpns" {
   description = "Virtual Private Networks"
-  type = map(object({
+  type = list(object({
     virtual_network_name      = string
-    subnet_prefix             = optional(string)
 
     virtual_network_gateway   = object({
       generation = optional(string, "Generation1")
@@ -212,30 +211,29 @@ variable "vpns" {
         asn = number
         peer_weight = optional(number)
       })))
-    })), {})
+      connection = object({
+        dpd_timeout_seconds = optional(number)
+        shared_key = string
+        connection_protocol = optional(string, "IKEv2")
+        enable_bgp = optional(bool, false)
 
-    connections = optional(map(object({
-      dpd_timeout_seconds = optional(number)
-      local_network_gateway_name = string
-      shared_key = string
-      connection_protocol = optional(string, "IKEv2")
+        custom_bgp_addresses = optional(object({
+          primary = string
+          secondary = optional(string)
+        }))
 
-      custom_bgp_addresses = optional(object({
-        primary = string
-        secondary = optional(string)
-      }))
-
-      ipsec_policy = optional(object({
-        dh_group = string
-        ike_encryption  = string
-        ike_integrity  = string
-        ipsec_encryption = string
-        ipsec_integrity  = string
-        pfs_group  = string
-        sa_datasize  = optional(number)
-        sa_lifetime  = optional(number)
-      }))
+        ipsec_policy = optional(object({
+          dh_group = string
+          ike_encryption  = string
+          ike_integrity  = string
+          ipsec_encryption = string
+          ipsec_integrity  = string
+          pfs_group  = string
+          sa_datasize  = optional(number)
+          sa_lifetime  = optional(number)
+        }))
+      })
     })), {})
   }))
-  default = {}
+  default = []
 }

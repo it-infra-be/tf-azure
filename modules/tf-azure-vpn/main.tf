@@ -7,15 +7,6 @@
  * with the provided subnet prefix.
  */
 
-# Gateway Subnet (needed for instances)
-resource "azurerm_subnet" "gw-snet" {
-  name                            = "GatewaySubnet"
-  resource_group_name             = var.resource_group_name
-  virtual_network_name            = regex(".*/virtualNetworks/(.*)", var.virtual_network_id)[0]
-  address_prefixes                = [var.subnet_prefix]
-  default_outbound_access_enabled = false
-}
-
 # Public IPs
 locals {
   public_ips = {
@@ -37,7 +28,7 @@ resource "azurerm_public_ip" "pip" {
 
 # Virtual Network Gateway
 resource "azurerm_virtual_network_gateway" "vnetgw" {
-  name                = var.name
+  name                = var.virtual_network_gateway.name
   location            = var.location
   resource_group_name = var.resource_group_name
 
@@ -53,9 +44,9 @@ resource "azurerm_virtual_network_gateway" "vnetgw" {
 
     content {
       name                          = ip_configuration.key
+      subnet_id                     = var.virtual_network_gateway.subnet_id
       public_ip_address_id          = ip_configuration.value.public_ip_address_name != null ? azurerm_public_ip.pip[ip_configuration.key].id : ip_configuration.value.public_ip_address_id
       private_ip_address_allocation = "Dynamic"
-      subnet_id                     = azurerm_subnet.gw-snet.id
     }
   }
 
@@ -83,9 +74,9 @@ resource "azurerm_virtual_network_gateway" "vnetgw" {
 
 # Local Network Gateways
 resource "azurerm_local_network_gateway" "lnetgw" {
-  for_each = var.local_network_gateways
+  for_each = { for lgw in var.local_network_gateways: lgw.name => lgw }
 
-  name                = each.key
+  name                = each.value.name
   location            = var.location
   resource_group_name = var.resource_group_name
   gateway_address     = each.value.gateway_address
@@ -105,9 +96,9 @@ resource "azurerm_local_network_gateway" "lnetgw" {
 
 # Tunnel Connections
 resource "azurerm_virtual_network_gateway_connection" "connection" {
-  for_each = var.connections
+  for_each = { for vcn in var.connections: vcn.name => vcn }
 
-  name                = each.key
+  name                = each.value.name
   location            = var.location
   resource_group_name = var.resource_group_name
   type                       = "IPsec"
@@ -116,7 +107,7 @@ resource "azurerm_virtual_network_gateway_connection" "connection" {
   shared_key = each.value.shared_key
   connection_mode = "Default"
   connection_protocol = each.value.connection_protocol
-  enable_bgp = var.local_network_gateways[each.value.local_network_gateway_name].bgp_peer != null ? true : false
+  enable_bgp = each.value.enable_bgp
 
   dynamic "custom_bgp_addresses" {
     for_each = each.value.custom_bgp_addresses != null ? [true] : []
