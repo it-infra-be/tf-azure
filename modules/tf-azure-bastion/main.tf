@@ -3,6 +3,8 @@
  *
  * This module installs an Azure Bastion Host and its public IP address.
  *
+ * This module will need a subnet called 'AzureBastionSubnet' in the provided Virtual Network!
+ *
  */
 
 # Public IP

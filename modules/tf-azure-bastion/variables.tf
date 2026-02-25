@@ -49,15 +49,10 @@ variable "virtual_network_id" {
   type        = string
 }
 
-variable "subnet_prefix" {
-  description = "The subnet prefix to place the Bastion host in. Not needed for SKU Developer."
+variable "subnet_id" {
+  description = "The Virtual Network 'AzureBastionSubnet' ID for the Bastion host"
   type        = string
   default     = null
-
-  validation {
-    condition     = var.sku == "Developer" || var.subnet_prefix != null
-    error_message = "Subnet prefix has to be defined if SKU is not 'Developer'."
-  }
 }
 
 variable "copy_paste_enabled" {
