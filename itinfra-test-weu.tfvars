@@ -154,11 +154,9 @@ vpns = [
       # }
       instances = {
         "instance1" = {
-          public_ip_address_name = "pip-vpn-fortigate-instance1"
           # bgp_apipa_addresses    = "169.254.21.1"
         }
         "instance2" = {
-          public_ip_address_name = "pip-vpn-fortigate-instance2"
           # bgp_apipa_addresses    = "169.254.22.1"
         }
       }

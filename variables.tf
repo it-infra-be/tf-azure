@@ -198,10 +198,9 @@ variable "vpns" {
         peer_weight = optional(number)
       }))
       instances = map(object({
-        public_ip_address_name = optional(string)
         public_ip_address_id   = optional(string)
         bgp_apipa_addresses    = optional(list(string))
-      }))
+      })))
     })
 
     local_network_gateways = optional(map(object({

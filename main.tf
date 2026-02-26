@@ -282,6 +282,9 @@ module "vpns" {
   virtual_network_gateway = merge(each.value.virtual_network_gateway, {
     name      = "vgw-${local.context}-${each.value.virtual_network_name}"
     subnet_id = module.vnets[each.value.virtual_network_name].subnets["GatewaySubnet"].id
+    instances = { for instance_name, instance in each.value.virtual_network_gateway.instances : instance_name =>
+      merge(instance, { public_ip_address_name = instance.public_ip_address_id != null ? null : "pip-${local.context}-vgw-${each.value.virtual_network_name}-${instance_name}" }
+    )}
   })
   local_network_gateways = [for lgw_name, lgw in each.value.local_network_gateways : merge(
     lgw, { name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}" }
