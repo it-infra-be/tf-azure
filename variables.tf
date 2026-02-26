@@ -187,12 +187,13 @@ variable "vpns" {
 
     virtual_network_gateway = object({
       generation    = optional(string, "Generation1")
+      enable_bgp    = optional(bool)
       sku           = optional(string, "VpnGw1AZ")
       active_active = optional(string, true)
       custom_route = optional(object({
         address_prefixes = list(string)
       }))
-      bgp = optional(object({
+      bgp_settings = optional(object({
         asn         = number
         peer_weight = optional(number)
       }))
@@ -207,16 +208,16 @@ variable "vpns" {
       gateway_address = optional(string)
       gateway_fqdn    = optional(string)
       address_space   = list(string)
-      bgp_peer = optional(map(object({
+      bgp_settings = optional(object({
         asn         = number
+        bgp_peering_address = string
         peer_weight = optional(number)
-      })))
+      }))
       connection = object({
         dpd_timeout_seconds = optional(number)
         shared_key          = string
         connection_protocol = optional(string, "IKEv2")
-        enable_bgp          = optional(bool, false)
-
+        enable_bgp          = optional(bool)
         custom_bgp_addresses = optional(object({
           primary   = string
           secondary = optional(string)

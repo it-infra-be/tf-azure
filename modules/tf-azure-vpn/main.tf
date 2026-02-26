@@ -34,7 +34,7 @@ resource "azurerm_virtual_network_gateway" "vnetgw" {
   vpn_type = "RouteBased"
 
   active_active = var.virtual_network_gateway.active_active
-  enable_bgp    = var.virtual_network_gateway.bgp != null ? true : false
+  enable_bgp    = var.virtual_network_gateway.enable_bgp != null ? var.virtual_network_gateway.enable_bgp : var.virtual_network_gateway.bgp_settings != null ? true : false
   sku           = var.virtual_network_gateway.sku
 
   dynamic "ip_configuration" {
@@ -57,11 +57,11 @@ resource "azurerm_virtual_network_gateway" "vnetgw" {
   }
 
   dynamic "bgp_settings" {
-    for_each = var.virtual_network_gateway.bgp != null ? var.virtual_network_gateway.instances : {}
+    for_each = var.virtual_network_gateway.bgp_settings != null ? var.virtual_network_gateway.instances : {}
 
     content {
-      asn         = var.virtual_network_gateway.bgp.asn
-      peer_weight = var.virtual_network_gateway.bgp.peer_weight
+      asn         = var.virtual_network_gateway.bgp_settings.asn
+      peer_weight = var.virtual_network_gateway.bgp_settings.peer_weight
       peering_addresses {
         ip_configuration_name = bgp_settings.key
         apipa_addresses       = bgp_settings.value.bgp_apipa_addresses
@@ -82,11 +82,11 @@ resource "azurerm_local_network_gateway" "lnetgw" {
   address_space       = each.value.address_space
 
   dynamic "bgp_settings" {
-    for_each = each.value.bgp_peer != null ? each.value.bgp_peer : {}
+    for_each = each.value.bgp_settings != null ? [ each.value.bgp_settings ] : []
 
     content {
-      bgp_peering_address = bgp_settings.key
       asn                 = bgp_settings.value.asn
+      bgp_peering_address = bgp_settings.value.bgp_peering_address
       peer_weight         = bgp_settings.value.peer_weight
     }
   }
@@ -105,7 +105,7 @@ resource "azurerm_virtual_network_gateway_connection" "connection" {
   shared_key                 = each.value.shared_key
   connection_mode            = "Default"
   connection_protocol        = each.value.connection_protocol
-  enable_bgp                 = each.value.enable_bgp
+  enable_bgp                 = each.value.enable_bgp != null ? each.value.enable_bgp : var.virtual_network_gateway.bgp_settings != null ? true : false
 
   dynamic "custom_bgp_addresses" {
     for_each = each.value.custom_bgp_addresses != null ? [each.value.custom_bgp_addresses] : []

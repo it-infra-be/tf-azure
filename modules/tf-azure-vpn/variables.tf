@@ -13,13 +13,14 @@ variable "virtual_network_gateway" {
   type = object({
     name          = string
     generation    = optional(string, "Generation1")
+    enable_bgp    = optional(bool) # If not configured: check if VGW bgp is configured
     sku           = optional(string, "VpnGw1AZ")
     active_active = optional(string, true)
     subnet_id     = string
     custom_route = optional(object({
       address_prefixes = list(string)
     }))
-    bgp = optional(object({
+    bgp_settings = optional(object({
       asn         = number
       peer_weight = optional(number)
     }))
@@ -32,16 +33,17 @@ variable "virtual_network_gateway" {
 }
 
 variable "local_network_gateways" {
-  description = "Configuration of local network gateways"
+  description = "Local network gateways to associate with virtual network gateway"
   type = list(object({
     name            = string
     gateway_address = optional(string)
     gateway_fqdn    = optional(string)
     address_space   = list(string)
-    bgp_peer = optional(map(object({
+    bgp_settings = optional(object({
       asn         = number
+      bgp_peering_address = string
       peer_weight = optional(number)
-    })))
+    }))
   }))
   default = []
 }
@@ -54,8 +56,7 @@ variable "connections" {
     local_network_gateway_name = string
     shared_key                 = string
     connection_protocol        = optional(string, "IKEv2")
-    enable_bgp                 = optional(bool, false)
-
+    enable_bgp                 = optional(bool) # If not configured: check if VGW bgp is configured
     custom_bgp_addresses = optional(object({
       primary   = string
       secondary = optional(string)

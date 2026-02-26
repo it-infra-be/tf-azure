@@ -149,7 +149,7 @@ vpns = [
       generation    = "Generation1"
       sku           = "VpnGw1AZ"
       active_active = true
-      # bgp = {
+      # bgp_settings = {
       #   asn = 65001
       # }
       instances = {
@@ -170,14 +170,13 @@ vpns = [
         address_space = [
           "192.168.1.0/24"
         ]
-        # bgp_peer = {
+        # bgp_settings = {
         #   asn = 65002
         # }
         connection = {
           #dpd_timeout_seconds = optional(number)
           shared_key          = "kfroi5939flrikd39"
           connection_protocol = "IKEv2"
-          enable_bgp          = false
 
           # custom_bgp_addresses = {
           #   primary = string
