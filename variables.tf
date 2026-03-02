@@ -18,6 +18,11 @@ variable "base_domain" {
   type        = string
 }
 
+variable "key_vault" {
+  description = "Key vault name"
+  type        = string
+}
+
 variable "public_ips" {
   description = "Reserved static public IP addresses"
   type = map(object({
@@ -182,9 +187,7 @@ variable "dns_zones" {
 
 variable "vpns" {
   description = "Virtual Private Networks"
-  type = list(object({
-    virtual_network_name = string
-
+  type = map(object({
     virtual_network_gateway = object({
       generation    = optional(string, "Generation1")
       enable_bgp    = optional(bool)
@@ -213,8 +216,8 @@ variable "vpns" {
         peer_weight = optional(number)
       }))
       connection = object({
+        key_vault_secret_psk = string
         dpd_timeout_seconds = optional(number)
-        shared_key          = string
         connection_protocol = optional(string, "IKEv2")
         enable_bgp          = optional(bool)
         custom_bgp_addresses = optional(object({
@@ -235,5 +238,5 @@ variable "vpns" {
       })
     })), {})
   }))
-  default = []
+  default = {}
 }

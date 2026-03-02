@@ -62,6 +62,15 @@ locals {
 }
 
 ###
+# Key Vault
+###
+# Get Key Vault
+data "azurerm_key_vault" "key_vault" {
+  name                = var.key_vault
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+###
 # Resource Group configuration
 ###
 resource "azurerm_resource_group" "rg" {
@@ -263,36 +272,55 @@ module "dns_zones" {
 ###
 # VPN Tunnels
 ###
+data "azurerm_key_vault_secret" "vpn_secret" {
+  for_each = {
+    for secret in flatten([
+      for vpn_key, vpn in var.vpns : [
+        for lgw_key, lgw in vpn.local_network_gateways : {
+          key = "${vpn_key}-${lgw_key}"
+          value = lgw.connection.key_vault_secret_psk
+        }
+      ]
+    ]) : secret.key => secret.value
+  }
+
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+  name         = each.value
+}
+
 locals {
   # Get connections from local network gateways
   connections = merge([
     for vpn_key, vpn in var.vpns : {
       for lgw_key, lgw in vpn.local_network_gateways :
-      lgw_key => lgw.connection
+      "${vpn_key}-${lgw_key}" => lgw.connection
     }
   ]...)
 }
 
 module "vpns" {
-  for_each = { for vpn in var.vpns : vpn.virtual_network_name => vpn }
+  for_each = var.vpns
 
   source              = "./modules/tf-azure-vpn"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   virtual_network_gateway = merge(each.value.virtual_network_gateway, {
-    name      = "vgw-${local.context}-${each.value.virtual_network_name}"
-    subnet_id = module.vnets[each.value.virtual_network_name].subnets["GatewaySubnet"].id
+    name      = "vgw-${local.context}-${each.key}"
+    subnet_id = module.vnets[each.key].subnets["GatewaySubnet"].id
     instances = { for instance_name, instance in each.value.virtual_network_gateway.instances : instance_name =>
-      merge(instance, { public_ip_address_name = instance.public_ip_address_id != null ? null : "pip-${local.context}-vgw-${each.value.virtual_network_name}-${instance_name}" }
+      merge(instance, { public_ip_address_name = instance.public_ip_address_id != null ? null : "pip-${local.context}-vgw-${each.key}-${instance_name}" }
     )}
   })
   local_network_gateways = [for lgw_name, lgw in each.value.local_network_gateways : merge(
-    lgw, { name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}" }
+    lgw, {
+      name = "lgw-${local.context}-${each.key}-${lgw_name}",
+    }
   )]
-  connections = [for lgw_name, vcn in local.connections : merge(
-    vcn, {
-      name                       = "vcn-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
-      local_network_gateway_name = "lgw-${local.context}-${each.value.virtual_network_name}-${lgw_name}",
+  connections = [for conn_name, conn in local.connections : merge(
+    conn, {
+      name                       = "vcn-${local.context}-${conn_name}",
+      local_network_gateway_name = "lgw-${local.context}-${conn_name}",
+      shared_key                 = data.azurerm_key_vault_secret.vpn_secret[conn_name].value
     }
   )]
 }

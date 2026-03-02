@@ -1,8 +1,13 @@
 /*
  * # Terraform Azure Module: VPN Connection
  *
- * This module installs an Azure VPN Connection.
+ * This module installs an Azure Virtual Network Gateway and its VPN connections.
  *
+ * A virtual network can only contain a single virtual network gateway.
+ *
+ * The local network gateways and their connections are only meant to be used by this virtual network gateway.
+ *
+ * This module will need a subnet called 'GatewaySubnet'!
  */
 
 # Public IPs
@@ -57,14 +62,18 @@ resource "azurerm_virtual_network_gateway" "vnetgw" {
   }
 
   dynamic "bgp_settings" {
-    for_each = var.virtual_network_gateway.bgp_settings != null ? var.virtual_network_gateway.instances : {}
+    for_each = var.virtual_network_gateway.bgp_settings != null ? [var.virtual_network_gateway.bgp_settings] : []
 
     content {
-      asn         = var.virtual_network_gateway.bgp_settings.asn
-      peer_weight = var.virtual_network_gateway.bgp_settings.peer_weight
-      peering_addresses {
-        ip_configuration_name = bgp_settings.key
-        apipa_addresses       = bgp_settings.value.bgp_apipa_addresses
+      asn         = bgp_settings.value.asn
+      peer_weight = bgp_settings.value.peer_weight
+
+      dynamic "peering_addresses" {
+        for_each = var.virtual_network_gateway.instances
+        content {
+          ip_configuration_name = peering_addresses.key
+          apipa_addresses       = peering_addresses.value.bgp_apipa_addresses
+        }
       }
     }
   }

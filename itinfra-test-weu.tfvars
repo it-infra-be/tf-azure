@@ -9,6 +9,8 @@ public_keys = {
 
 create_default_domain = false
 
+key_vault = "kpetest"
+
 # public_ips = {
 #   "vm001" = {}
 # }
@@ -141,10 +143,8 @@ vms = {
 #   }
 # }
 
-vpns = [
-  {
-    virtual_network_name = "default"
-
+vpns = {
+  "default" = {
     virtual_network_gateway = {
       generation    = "Generation1"
       sku           = "VpnGw1AZ"
@@ -173,8 +173,8 @@ vpns = [
         # }
         connection = {
           #dpd_timeout_seconds = optional(number)
-          shared_key          = "kfroi5939flrikd39"
-          connection_protocol = "IKEv2"
+          key_vault_secret_psk = "vpn"
+          connection_protocol  = "IKEv2"
 
           # custom_bgp_addresses = {
           #   primary = string
@@ -193,4 +193,4 @@ vpns = [
       }
     }
   }
-]
+}
