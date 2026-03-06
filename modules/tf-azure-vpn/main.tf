@@ -111,6 +111,7 @@ resource "azurerm_virtual_network_gateway_connection" "connection" {
   type                       = "IPsec"
   virtual_network_gateway_id = azurerm_virtual_network_gateway.vnetgw.id
   local_network_gateway_id   = azurerm_local_network_gateway.lnetgw[each.value.local_network_gateway_name].id
+  dpd_timeout_seconds        = each.value.dpd_timeout_seconds
   shared_key                 = each.value.shared_key
   connection_mode            = "Default"
   connection_protocol        = each.value.connection_protocol

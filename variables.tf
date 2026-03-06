@@ -209,7 +209,7 @@ variable "vpns" {
     local_network_gateways = optional(map(object({
       gateway_address = optional(string)
       gateway_fqdn    = optional(string)
-      address_space   = list(string)
+      address_space   = optional(list(string))
       bgp_settings = optional(object({
         asn         = number
         bgp_peering_address = string
