@@ -40,9 +40,9 @@ variable "local_network_gateways" {
     gateway_fqdn    = optional(string)
     address_space   = list(string)
     bgp_settings = optional(object({
-      asn         = number
+      asn                 = number
       bgp_peering_address = string
-      peer_weight = optional(number)
+      peer_weight         = optional(number)
     }))
   }))
   default = []

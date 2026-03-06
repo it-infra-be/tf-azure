@@ -201,8 +201,8 @@ variable "vpns" {
         peer_weight = optional(number)
       }))
       instances = map(object({
-        public_ip_address_id   = optional(string)
-        bgp_apipa_addresses    = optional(list(string))
+        public_ip_address_id = optional(string)
+        bgp_apipa_addresses  = optional(list(string))
       }))
     })
 
@@ -211,15 +211,15 @@ variable "vpns" {
       gateway_fqdn    = optional(string)
       address_space   = optional(list(string))
       bgp_settings = optional(object({
-        asn         = number
+        asn                 = number
         bgp_peering_address = string
-        peer_weight = optional(number)
+        peer_weight         = optional(number)
       }))
       connection = object({
         key_vault_secret_psk = string
-        dpd_timeout_seconds = optional(number)
-        connection_protocol = optional(string, "IKEv2")
-        enable_bgp          = optional(bool)
+        dpd_timeout_seconds  = optional(number)
+        connection_protocol  = optional(string, "IKEv2")
+        enable_bgp           = optional(bool)
         custom_bgp_addresses = optional(object({
           primary   = string
           secondary = optional(string)

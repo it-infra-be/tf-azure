@@ -277,7 +277,7 @@ data "azurerm_key_vault_secret" "vpn_secret" {
     for secret in flatten([
       for vpn_key, vpn in var.vpns : [
         for lgw_key, lgw in vpn.local_network_gateways : {
-          key = "${vpn_key}-${lgw_key}"
+          key   = "${vpn_key}-${lgw_key}"
           value = lgw.connection.key_vault_secret_psk
         }
       ]
@@ -309,7 +309,7 @@ module "vpns" {
     subnet_id = module.vnets[each.key].subnets["GatewaySubnet"].id
     instances = { for instance_name, instance in each.value.virtual_network_gateway.instances : instance_name =>
       merge(instance, { public_ip_address_name = instance.public_ip_address_id != null ? null : "pip-${local.context}-vgw-${each.key}-${instance_name}" }
-    )}
+    ) }
   })
   local_network_gateways = [for lgw_name, lgw in each.value.local_network_gateways : merge(
     lgw, {

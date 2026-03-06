@@ -91,7 +91,7 @@ resource "azurerm_local_network_gateway" "lnetgw" {
   address_space       = each.value.address_space
 
   dynamic "bgp_settings" {
-    for_each = each.value.bgp_settings != null ? [ each.value.bgp_settings ] : []
+    for_each = each.value.bgp_settings != null ? [each.value.bgp_settings] : []
 
     content {
       asn                 = bgp_settings.value.asn
