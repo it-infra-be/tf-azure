@@ -48,7 +48,6 @@ nsgs = {
   ]
 }
 
-
 vnets = {
   "default" = {
     address_spaces = ["10.0.0.0/16"]
@@ -71,6 +70,14 @@ vnets = {
         address_prefix                  = "10.0.255.0/24",
         default_outbound_access_enabled = false
       }
+    }
+  }
+}
+
+key_vaults = {
+  "itinfra-test-weu" = {
+    network_acls = {
+      ip_rules = ["213.118.249.152"]
     }
   }
 }
@@ -145,6 +152,8 @@ vms = {
 
 vpns = {
   "default" = {
+    key_vault_name = "itinfra-test-weu"
+
     virtual_network_gateway = {
       generation    = "Generation1"
       sku           = "VpnGw1AZ"

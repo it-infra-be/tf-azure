@@ -18,9 +18,24 @@ variable "base_domain" {
   type        = string
 }
 
-variable "key_vault" {
-  description = "Key vault name"
-  type        = string
+variable "key_vaults" {
+  description = "Key Vaults"
+  type = map(object({
+    sku                             = optional(string, "standard")
+    soft_delete_retention_days      = optional(number, 7)
+    purge_protection_enabled        = optional(bool, false)
+    enabled_for_deployment          = optional(bool, false)
+    enabled_for_template_deployment = optional(bool, false)
+    enabled_for_disk_encryption     = optional(bool, false)
+    public_network_access_enabled   = optional(bool, true)
+    network_acls = optional(object({
+      bypass                     = optional(string, "None")
+      default_action             = optional(string, "Deny")
+      ip_rules                   = optional(list(string))
+      virtual_network_subnet_ids = optional(list(string))
+    }))
+  }))
+  default = {}
 }
 
 variable "public_ips" {
@@ -188,6 +203,8 @@ variable "dns_zones" {
 variable "vpns" {
   description = "Virtual Private Networks"
   type = map(object({
+    key_vault_name = string
+
     virtual_network_gateway = object({
       generation    = optional(string, "Generation1")
       enable_bgp    = optional(bool)

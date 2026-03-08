@@ -62,15 +62,6 @@ locals {
 }
 
 ###
-# Key Vault
-###
-# Get Key Vault
-data "azurerm_key_vault" "key_vault" {
-  name                = var.key_vault
-  resource_group_name = azurerm_resource_group.rg.name
-}
-
-###
 # Resource Group configuration
 ###
 resource "azurerm_resource_group" "rg" {
@@ -88,6 +79,29 @@ resource "azurerm_public_ip" "pip" {
   allocation_method   = "Static"
   sku                 = "Standard"
   zones               = each.value.zones
+}
+
+###
+# Key Vaults configuration
+###
+# TODO: Create separate resource group for key vaults
+module "key_vaults" {
+  for_each = var.key_vaults
+
+  source                     = "./modules/tf-azure-key-vault"
+  resource_group_name        = azurerm_resource_group.rg.name
+  location                   = var.location
+  name                       = each.key
+  sku                        = each.value.sku
+  soft_delete_retention_days = each.value.soft_delete_retention_days
+  purge_protection_enabled   = each.value.purge_protection_enabled
+
+  enabled_for_deployment          = each.value.enabled_for_deployment
+  enabled_for_template_deployment = each.value.enabled_for_template_deployment
+  enabled_for_disk_encryption     = each.value.enabled_for_disk_encryption
+
+  public_network_access_enabled = each.value.public_network_access_enabled
+  network_acls                  = each.value.network_acls
 }
 
 ###
@@ -278,14 +292,17 @@ data "azurerm_key_vault_secret" "vpn_secret" {
       for vpn_key, vpn in var.vpns : [
         for lgw_key, lgw in vpn.local_network_gateways : {
           key   = "${vpn_key}-${lgw_key}"
-          value = lgw.connection.key_vault_secret_psk
+          value = {
+            key_vault_name = vpn.key_vault_name
+            secret_psk = lgw.connection.key_vault_secret_psk
+          }
         }
       ]
     ]) : secret.key => secret.value
   }
 
-  key_vault_id = data.azurerm_key_vault.key_vault.id
-  name         = each.value
+  key_vault_id = module.key_vaults[each.value["key_vault_name"]].id
+  name         = each.value["secret_psk"]
 }
 
 locals {

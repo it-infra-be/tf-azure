@@ -1,4 +1,14 @@
-## [1.2.0] - 2025-02-25
+## [1.3.0] - 2026-03-8
+
+### New Features
+
+- Key Vault configuration
+
+### Improvements
+
+- [BREAKING] Change key vault setup for VPNs
+
+## [1.2.0] - 2026-02-25
 
 ### New Features
 
