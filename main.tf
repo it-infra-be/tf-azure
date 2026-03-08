@@ -62,6 +62,15 @@ locals {
 }
 
 ###
+# Key Vault
+###
+# Get Key Vault
+data "azurerm_key_vault" "key_vault" {
+  name                = var.key_vault
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+###
 # Resource Group configuration
 ###
 resource "azurerm_resource_group" "rg" {
@@ -156,7 +165,7 @@ module "bastions" {
   sku                       = each.value.sku
   new_public_ip_address     = { name = "pip-${local.context}-bastion-${each.key}" }
   virtual_network_id        = module.vnets[each.value.virtual_network_name].id
-  subnet_prefix             = each.value.subnet_prefix
+  subnet_id                 = module.vnets[each.value.virtual_network_name].subnets["AzureBastionSubnet"].id
   copy_paste_enabled        = each.value.copy_paste_enabled
   file_copy_enabled         = each.value.file_copy_enabled
   scale_units               = each.value.scale_units
@@ -224,7 +233,7 @@ locals {
   default_domain = "${var.environment}.${var.project}.${local.locations[var.location]}.${var.base_domain}"
 
   # Add default domain to dns zones
-  dns_zones = merge({ (local.default_domain) = {} }, var.dns_zones)
+  dns_zones = merge(var.create_default_domain ? { (local.default_domain) = {} } : {}, var.dns_zones)
 
   # Create VM A records (DNS zone name -> A records)
   vm_a_records = {
@@ -248,7 +257,7 @@ module "dns_zones" {
   source              = "./modules/tf-azure-dns-zone"
   resource_group_name = azurerm_resource_group.rg.name
   name                = each.key
-  soa_record          = each.value.soa_record
+  soa_record          = try(each.value.soa_record, null)
   a_records           = { for name, record in merge(try(each.value.a_records, {}), local.vm_a_records[each.key]) : name => { records = record } }
   aaaa_records        = { for name, record in try(each.value.aaaa_records, {}) : name => { records = record } }
   ptr_records         = { for name, record in try(each.value.ptr_records, {}) : name => { records = record } }
@@ -258,4 +267,60 @@ module "dns_zones" {
   mx_records          = { for name, record in try(each.value.mx_records, {}) : name => { records = record } }
   srv_records         = { for name, record in try(each.value.srv_records, {}) : name => { records = record } }
   caa_records         = { for name, record in try(each.value.caa_records, {}) : name => { records = record } }
+}
+
+###
+# VPN Tunnels
+###
+data "azurerm_key_vault_secret" "vpn_secret" {
+  for_each = {
+    for secret in flatten([
+      for vpn_key, vpn in var.vpns : [
+        for lgw_key, lgw in vpn.local_network_gateways : {
+          key   = "${vpn_key}-${lgw_key}"
+          value = lgw.connection.key_vault_secret_psk
+        }
+      ]
+    ]) : secret.key => secret.value
+  }
+
+  key_vault_id = data.azurerm_key_vault.key_vault.id
+  name         = each.value
+}
+
+locals {
+  # Get connections from local network gateways
+  connections = merge([
+    for vpn_key, vpn in var.vpns : {
+      for lgw_key, lgw in vpn.local_network_gateways :
+      "${vpn_key}-${lgw_key}" => lgw.connection
+    }
+  ]...)
+}
+
+module "vpns" {
+  for_each = var.vpns
+
+  source              = "./modules/tf-azure-vpn"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = var.location
+  virtual_network_gateway = merge(each.value.virtual_network_gateway, {
+    name      = "vgw-${local.context}-${each.key}"
+    subnet_id = module.vnets[each.key].subnets["GatewaySubnet"].id
+    instances = { for instance_name, instance in each.value.virtual_network_gateway.instances : instance_name =>
+      merge(instance, { public_ip_address_name = instance.public_ip_address_id != null ? null : "pip-${local.context}-vgw-${each.key}-${instance_name}" }
+    ) }
+  })
+  local_network_gateways = [for lgw_name, lgw in each.value.local_network_gateways : merge(
+    lgw, {
+      name = "lgw-${local.context}-${each.key}-${lgw_name}",
+    }
+  )]
+  connections = [for conn_name, conn in local.connections : merge(
+    conn, {
+      name                       = "vcn-${local.context}-${conn_name}",
+      local_network_gateway_name = "lgw-${local.context}-${conn_name}",
+      shared_key                 = data.azurerm_key_vault_secret.vpn_secret[conn_name].value
+    }
+  )]
 }

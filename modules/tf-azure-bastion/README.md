@@ -3,8 +3,7 @@
 
 This module installs an Azure Bastion Host and its public IP address.
 
-This module also configures the 'AzureBastionSubnet' in the provided Virtual Network
-with the provided subnet prefix.
+This module will need a subnet called 'AzureBastionSubnet'!
 
 ## Providers
 
@@ -26,7 +25,7 @@ with the provided subnet prefix.
 | <a name="input_scale_units"></a> [scale\_units](#input\_scale\_units) | The number of scale units with which to provision the Bastion Host (2-50). | `number` | `null` | no |
 | <a name="input_session_recording_enabled"></a> [session\_recording\_enabled](#input\_session\_recording\_enabled) | Enable session recording feature for the Bastion Host. | `bool` | `false` | no |
 | <a name="input_sku"></a> [sku](#input\_sku) | SKU for the Bastion Host | `string` | `"Developer"` | no |
-| <a name="input_subnet_prefix"></a> [subnet\_prefix](#input\_subnet\_prefix) | The subnet prefix to place the Bastion host in. Not needed for SKU Developer. | `string` | `null` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | The Virtual Network 'AzureBastionSubnet' ID for the Bastion host | `string` | `null` | no |
 | <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The Virtual Network ID for the Bastion host | `string` | n/a | yes |
 | <a name="input_zones"></a> [zones](#input\_zones) | Zones to which Bastion Host belongs. | `list(string)` | `null` | no |
 

@@ -1,3 +1,14 @@
+## [1.2.0] - 2025-02-25
+
+### New Features
+
+- VPN configuration
+
+### Improvements
+
+- Make default domain zone creation optional
+- [BREAKING] Removed automatic AzureBastionSubnet creation
+
 ## [1.1.0] - 2025-09-24
 
 ### New Features

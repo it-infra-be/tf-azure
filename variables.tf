@@ -18,6 +18,11 @@ variable "base_domain" {
   type        = string
 }
 
+variable "key_vault" {
+  description = "Key vault name"
+  type        = string
+}
+
 variable "public_ips" {
   description = "Reserved static public IP addresses"
   type = map(object({
@@ -136,7 +141,14 @@ variable "vms" {
   default = {}
 }
 
+variable "create_default_domain" {
+  description = "Create default domain based on base_domain, location, project and environment."
+  type        = bool
+  default     = true
+}
+
 variable "dns_zones" {
+  description = "DNS zones with records"
   type = map(object({
     soa_record = optional(object({
       email         = string
@@ -171,4 +183,60 @@ variable "dns_zones" {
     }))), {})
   }))
   default = null
+}
+
+variable "vpns" {
+  description = "Virtual Private Networks"
+  type = map(object({
+    virtual_network_gateway = object({
+      generation    = optional(string, "Generation1")
+      enable_bgp    = optional(bool)
+      sku           = optional(string, "VpnGw1AZ")
+      active_active = optional(string, true)
+      custom_route = optional(object({
+        address_prefixes = list(string)
+      }))
+      bgp_settings = optional(object({
+        asn         = number
+        peer_weight = optional(number)
+      }))
+      instances = map(object({
+        public_ip_address_id = optional(string)
+        bgp_apipa_addresses  = optional(list(string))
+      }))
+    })
+
+    local_network_gateways = optional(map(object({
+      gateway_address = optional(string)
+      gateway_fqdn    = optional(string)
+      address_space   = optional(list(string))
+      bgp_settings = optional(object({
+        asn                 = number
+        bgp_peering_address = string
+        peer_weight         = optional(number)
+      }))
+      connection = object({
+        key_vault_secret_psk = string
+        dpd_timeout_seconds  = optional(number)
+        connection_protocol  = optional(string, "IKEv2")
+        enable_bgp           = optional(bool)
+        custom_bgp_addresses = optional(object({
+          primary   = string
+          secondary = optional(string)
+        }))
+
+        ipsec_policy = optional(object({
+          dh_group         = string
+          ike_encryption   = string
+          ike_integrity    = string
+          ipsec_encryption = string
+          ipsec_integrity  = string
+          pfs_group        = string
+          sa_datasize      = optional(number)
+          sa_lifetime      = optional(number)
+        }))
+      })
+    })), {})
+  }))
+  default = {}
 }

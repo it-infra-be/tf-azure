@@ -4,16 +4,20 @@ location    = "westeurope"
 base_domain = "example.com"
 
 public_keys = {
-  "default" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAXE0oiFQ+Iu7aP43EE32H1wp2SpqpqOw99OPw78wRxw"
+  "default" = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICc01YBW875bXi6/bHlw6k9sBAF2lRpAHkEMveoeMLih"
 }
 
-public_ips = {
-  "vm001" = {}
-}
+create_default_domain = false
 
-natgws = {
-  "default" = { public_ip_count = 1 }
-}
+key_vault = "kpetest"
+
+# public_ips = {
+#   "vm001" = {}
+# }
+#
+# natgws = {
+#   "default" = { public_ip_count = 1 }
+# }
 
 nsgs = {
   "default" = [
@@ -53,10 +57,18 @@ vnets = {
         address_prefix                  = "10.0.1.0/24",
         default_outbound_access_enabled = true
         network_security_group_name     = "default"
-        nat_gateway_name                = "default"
+        #        nat_gateway_name                = "default"
       },
       "private" = {
         address_prefix                  = "10.0.2.0/24",
+        default_outbound_access_enabled = false
+      }
+      "GatewaySubnet" = {
+        address_prefix                  = "10.0.254.0/24",
+        default_outbound_access_enabled = false
+      }
+      "AzureBastionSubnet" = {
+        address_prefix                  = "10.0.255.0/24",
         default_outbound_access_enabled = false
       }
     }
@@ -67,7 +79,6 @@ bastions = {
   "basic001" = {
     sku                  = "Basic"
     virtual_network_name = "default"
-    subnet_prefix        = "10.0.255.0/24"
   }
 }
 
@@ -85,49 +96,101 @@ vms = {
       {
         ip_configurations = [
           {
-            subnet_name            = "public"
-            public_ip_address_name = "vm001"
+            subnet_name = "private"
+            #public_ip_address_name = "vm001"
           }
         ]
         network_security_group = "default"
       }
     ]
   }
-  "vm002" = {
-    domain = "example2.com"
-    aliases = [
-      "test5"
-    ]
-    admin_username        = "itinfra"
-    admin_public_key_name = "default"
-    size                  = "Standard_B1s"
-    virtual_network_name  = "default"
-    interfaces = [
-      {
-        ip_configurations = [
-          {
-            subnet_name            = "public"
-            public_ip_address_name = "vm001"
-          }
-        ]
-        network_security_group = "default"
-      }
-    ]
-  }
+  #   "vm002" = {
+  #     domain = "example2.com"
+  #     aliases = [
+  #       "test5"
+  #     ]
+  #     admin_username        = "itinfra"
+  #     admin_public_key_name = "default"
+  #     size                  = "Standard_B1s"
+  #     virtual_network_name  = "default"
+  #     interfaces = [
+  #       {
+  #         ip_configurations = [
+  #           {
+  #             subnet_name            = "public"
+  #             public_ip_address_name = "vm001"
+  #           }
+  #         ]
+  #         network_security_group = "default"
+  #       }
+  #     ]
+  #   }
 }
 
-dns_zones = {
-  "test.itinfra.weu.example.com" = {
-    a_records = {
-      "test" = ["10.10.10.10"]
+# dns_zones = {
+#   "test.itinfra.weu.example.com" = {
+#     a_records = {
+#       "test" = ["10.10.10.10"]
+#     }
+#     cname_records = {
+#       "test2" = "test"
+#     }
+#   }
+#   "example2.com" = {
+#     a_records = {
+#       "test" = ["10.10.10.10"]
+#     }
+#   }
+# }
+
+vpns = {
+  "default" = {
+    virtual_network_gateway = {
+      generation    = "Generation1"
+      sku           = "VpnGw1AZ"
+      active_active = true
+      # bgp_settings = {
+      #   asn = 65001
+      # }
+      instances = {
+        "instance1" = {
+          # bgp_apipa_addresses    = "169.254.21.1"
+        }
+        "instance2" = {
+          # bgp_apipa_addresses    = "169.254.22.1"
+        }
+      }
     }
-    cname_records = {
-      "test2" = "test"
-    }
-  }
-  "example2.com" = {
-    a_records = {
-      "test" = ["10.10.10.10"]
+
+    local_network_gateways = {
+      "home" = {
+        gateway_address = "213.118.249.152"
+        address_space = [
+          "192.168.1.0/24"
+        ]
+        # bgp_settings = {
+        #   asn = 65002
+        # }
+        connection = {
+          #dpd_timeout_seconds = optional(number)
+          key_vault_secret_psk = "vpn"
+          connection_protocol  = "IKEv2"
+
+          # custom_bgp_addresses = {
+          #   primary = string
+          #   secondary = optional(string)
+          # }
+          ipsec_policy = {
+            dh_group         = "DHGroup14"
+            ike_encryption   = "GCMAES256"
+            ike_integrity    = "SHA384"
+            ipsec_encryption = "GCMAES256"
+            ipsec_integrity  = "GCMAES256"
+            pfs_group        = "None"
+            sa_lifetime      = 27000
+          }
+        }
+      }
     }
   }
 }
